@@ -12,20 +12,23 @@ export default function CloudAiSettings() {
   return (
     <div>
       <h2 className="text-kdc-title font-medium text-kdc-primary mb-5">Cloud AI 設定</h2>
-      <div className="flex pl-[5px]">
+      <ul className="flex flex-wrap pl-5 m-0" role="tablist">
         {tabs.map((t, i) => (
-          <button
+          <li
             key={t}
-            className={`px-5 py-2 text-kdc-btn cursor-pointer rounded-t-[5px] border-none outline-none mr-0.5 transition-colors duration-150
+            role="tab"
+            aria-selected={activeTab === i}
+            className={`cursor-pointer flex justify-center list-none mr-px min-w-[50px] px-4 py-1.5 relative tracking-[0.1rem] font-normal rounded-t-[10px] border border-transparent border-b-0 transition-colors duration-150
               ${activeTab === i
-                ? 'bg-kdc-tab-selected text-kdc-primary-alt font-medium'
+                ? 'bg-white text-kdc-primary-alt z-10'
                 : 'bg-kdc-tab-unselected text-white'}`}
+            style={{ transform: 'skew(-20deg) translateX(10%)' }}
             onClick={() => setActiveTab(i)}
           >
-            {t}
-          </button>
+            <span className="inline-block" style={{ transform: 'skew(20deg)' }}>{t}</span>
+          </li>
         ))}
-      </div>
+      </ul>
       <div className="bg-white border border-kdc-border border-t-0 p-6 min-h-[400px]">
         {activeTab === 0 && <VlmProfilesTab />}
         {activeTab === 1 && <PromptsTab />}

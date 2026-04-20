@@ -54,7 +54,19 @@ export function IconHamburger() {
   return <svg {...svgProps18} width={24} height={24}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
 }
 export function IconLogout() {
-  return <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+  /* KDC original: orange filled logout icon (#F45D31), 32x32 viewBox */
+  return (
+    <svg width={24} height={24} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="none" strokeWidth={1} fill="none" fillRule="evenodd">
+        <g transform="translate(4, 4)" fill="#F45D31" stroke="#F45D31" strokeWidth="0.2">
+          <path d="M2,22 L2,2 L14,2 L14,8 C14,8.55 14.45,9 15,9 C15.55,9 16,8.55 16,8 L16,1 C16,0.45 15.55,0 15,0 L1,0 C0.45,0 0,0.45 0,1 L0,23 C0,23.55 0.45,24 1,24 L15,24 C15.55,24 16,23.55 16,23 L16,16 C16,15.45 15.55,15 15,15 C14.45,15 14,15.45 14,16 L14,22 L2,22 Z" />
+          <path d="M12,13 L23,13 C23.55,13 24,12.55 24,12 C24,11.45 23.55,11 23,11 L12,11 C11.45,11 11,11.45 11,12 C11,12.55 11.45,13 12,13" />
+          <path d="M23.71,11.29 L19.71,7.29 C19.32,6.90 18.68,6.90 18.29,7.29 C17.90,7.68 17.90,8.32 18.29,8.71 L22.29,12.71 C22.68,13.10 23.32,13.10 23.71,12.71 C24.10,12.32 24.10,11.68 23.71,11.29" />
+          <path d="M22.29,11.29 L18.29,15.29 C17.90,15.68 17.90,16.32 18.29,16.71 C18.68,17.10 19.32,17.10 19.71,16.71 L23.71,12.71 C24.10,12.32 24.10,11.68 23.71,11.29 C23.32,10.90 22.68,10.90 22.29,11.29" />
+        </g>
+      </g>
+    </svg>
+  );
 }
 export function IconCalendar() {
   return <svg {...svgProps16}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
