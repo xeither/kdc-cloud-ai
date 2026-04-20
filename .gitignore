@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# MCP config (local only)
+.mcp.json
+.mcp.json.bak
