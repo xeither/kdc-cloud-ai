@@ -11,7 +11,7 @@ export default function Header() {
         <img src="/tutk-logo.png" alt="TUTK" className="h-10" />
         <span className="text-xl font-semibold text-kdc-text ml-2">KDC Internal</span>
       </div>
-      <div className="flex items-center gap-4 text-kdc-text text-kdc-body">
+      <div className="flex items-center gap-4 text-kdc-text text-kdc-body pr-[150px]">
         <span>kmp_admin@tutk.com</span>
         <span className="cursor-pointer text-kdc-text flex items-center"><IconLogout /></span>
       </div>
