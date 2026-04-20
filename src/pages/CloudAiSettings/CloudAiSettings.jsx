@@ -18,7 +18,7 @@ export default function CloudAiSettings() {
             key={t}
             role="tab"
             aria-selected={activeTab === i}
-            className={`cursor-pointer flex justify-center list-none mr-px min-w-[50px] px-4 py-1.5 relative tracking-[0.1rem] font-normal rounded-t-[10px] border border-transparent border-b-0 transition-colors duration-150
+            className={`cursor-pointer flex justify-center list-none mr-px min-w-[120px] px-8 py-2.5 relative tracking-[0.1rem] font-normal text-kdc-table rounded-t-[10px] border border-transparent border-b-0 transition-colors duration-150
               ${activeTab === i
                 ? 'bg-white text-kdc-primary-alt z-10'
                 : 'bg-kdc-tab-unselected text-white'}`}
