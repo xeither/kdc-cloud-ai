@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-kdc-primary: #004480;
+  --color-kdc-primary-alt: #00437e;
+  --color-kdc-sidebar-active: #f4f4f4;
+  --color-kdc-body-bg: #f4f4f4;
+  --color-kdc-text: #333333;
+  --color-kdc-table-header: #00437e;
+  --color-kdc-table-row-alt: #eff1f5;
+  --color-kdc-form-label: #d1deea;
+  --color-kdc-form-label-dark: rgba(144, 184, 224, 0.89);
+  --color-kdc-tab-selected: #ffffff;
+  --color-kdc-tab-unselected: #658db1;
+  --color-kdc-border: #e1e7f1;
+  --color-kdc-required: #f60b0b;
+  --color-kdc-footer-bg: #eceff1;
+  --color-kdc-footer-text: #9b9b9b;
+
+  --font-kdc: PingFangTC, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --text-kdc-body: 14px;
+  --text-kdc-table: 16px;
+  --text-kdc-title: 20.8px;
+  --text-kdc-sidebar: 16px;
+  --text-kdc-btn: 16px;
+
+  --width-sidebar: 220px;
+  --height-header: 80px;
+
+  --radius-btn: 20px;
+}
+
+/* Toggle switch — requires pseudo-element that Tailwind can't express inline */
+.toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #ccc;
+  border-radius: 12px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-slider.active {
+  background: var(--color-kdc-primary);
+}
+.toggle-slider.active::before {
+  transform: translateX(20px);
+}
+
+/* Sidebar scrollbar */
+.kdc-sidebar::-webkit-scrollbar { width: 4px; }
+.kdc-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 2px; }
