@@ -51,12 +51,12 @@ export function IconClose() {
   return <svg {...svgProps18}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 }
 export function IconHamburger() {
-  return <svg {...svgProps18} width={24} height={24}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+  return <svg {...svgProps18} width={25} height={25}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
 }
 export function IconLogout() {
   /* KDC original: orange filled logout icon (#F45D31), 32x32 viewBox */
   return (
-    <svg width={24} height={24} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <svg width={32} height={32} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
       <g stroke="none" strokeWidth={1} fill="none" fillRule="evenodd">
         <g transform="translate(4, 4)" fill="#F45D31" stroke="#F45D31" strokeWidth="0.2">
           <path d="M2,22 L2,2 L14,2 L14,8 C14,8.55 14.45,9 15,9 C15.55,9 16,8.55 16,8 L16,1 C16,0.45 15.55,0 15,0 L1,0 C0.45,0 0,0.45 0,1 L0,23 C0,23.55 0.45,24 1,24 L15,24 C15.55,24 16,23.55 16,23 L16,16 C16,15.45 15.55,15 15,15 C14.45,15 14,15.45 14,16 L14,22 L2,22 Z" />
