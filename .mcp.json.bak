@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/Users/ronald_chen/mcp-servers-main/confluence-mcp/index.js"
+      ],
+      "env": {
+        "CONFLUENCE_BASE_URL": "https://confluence.tutk.com/",
+        "CONFLUENCE_SESSION_COOKIE": "19E907D9B9BBF3EE6465B28363F6E2FD",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    },
+    "hedgedoc": {
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/Users/ronald_chen/mcp-servers-main/hedgedoc-mcp/dist/index.js"
+      ],
+      "env": {
+        "HEDGEDOC_API_URL": "https://codimd.tutk.com",
+        "HEDGEDOC_SESSION_COOKIE": "s%3AJ3NxmWuUanp0yGy8lLSG8lGGETOY1R2v.wZr3a0kwCx375LKkwJFUu6l34auYwBupF%2BlRb95e6bs",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    },
+    "jira": {
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/Users/ronald_chen/mcp-servers-main/jira-mcp/index.js"
+      ],
+      "env": {
+        "JIRA_BASE_URL": "https://jira.tutk.com",
+        "JIRA_SESSION_COOKIE": "2E18DEC5D68B8A5A255A5ABC42917BF4",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    }
+  }
+}

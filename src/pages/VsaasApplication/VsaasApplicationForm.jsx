@@ -8,6 +8,8 @@ export default function VsaasApplicationForm() {
   const navigate = useNavigate();
   const { aiPlans, globalPlans, vendors, vendorSettings } = useCloudAi();
   const [selectedVendorId, setSelectedVendorId] = useState("");
+  const [vendorInput, setVendorInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [f, setF] = useState({
     vendorId: "", salesPerson: "",
     serviceType: "test", piPoNo: "", region: [], paymentStatus: "prepaid",
@@ -27,15 +29,37 @@ export default function VsaasApplicationForm() {
   };
   const planName = (id) => aiPlans.find(p => p.id === id)?.name || id;
 
-  // When vendor changes, update form vendorId and reset cloudAiPlan
-  const handleVendorChange = (vendorId) => {
-    setSelectedVendorId(vendorId);
-    u("vendorId", vendorId);
+  // Autocomplete: filter vendors by VID or name as user types
+  const filteredVendors = vendorInput.trim() === ""
+    ? vendors
+    : vendors.filter(v =>
+        v.vid.toLowerCase().includes(vendorInput.toLowerCase()) ||
+        v.name.toLowerCase().includes(vendorInput.toLowerCase())
+      );
+
+  const handleVendorInputChange = (val) => {
+    setVendorInput(val);
+    setShowSuggestions(true);
+    // If typed value no longer matches the selected vendor's display string, clear selection
+    if (selectedVendorId) {
+      const sel = vendors.find(v => v.id === selectedVendorId);
+      if (sel && val !== `${sel.vid} ${sel.name}`) {
+        setSelectedVendorId("");
+        u("vendorId", "");
+        u("cloudAiPlan", "");
+      }
+    }
+  };
+
+  const selectVendor = (vendor) => {
+    setVendorInput(`${vendor.vid} ${vendor.name}`);
+    setSelectedVendorId(vendor.id);
+    u("vendorId", vendor.id);
     u("cloudAiPlan", "");
+    setShowSuggestions(false);
   };
 
   // Available AI Plans for selected vendor = global + vendor-specific
-  const selectedVendor = vendors.find(v => v.id === selectedVendorId);
   const vs = vendorSettings[selectedVendorId] || { specificPlans: [], defaultPlan: "" };
   const vendorAvailablePlans = [...globalPlans, ...(vs.specificPlans || [])];
 
@@ -65,10 +89,30 @@ export default function VsaasApplicationForm() {
         <div className="flex border-b border-kdc-border">
           <div className={labelCls}><span className="text-kdc-required mr-0.5">*</span>客戶代碼(VID)/名稱 :</div>
           <div className={`${valCls} flex-1`}>
-            <select className={`${selectCls} w-[300px]`} value={selectedVendorId} onChange={e => handleVendorChange(e.target.value)}>
-              <option value="">— 請選擇客戶 —</option>
-              {vendors.map(v => <option key={v.id} value={v.id}>{v.vid} {v.name}</option>)}
-            </select>
+            <div className="relative">
+              <input
+                className={`${inputCls} w-[360px]`}
+                value={vendorInput}
+                onChange={e => handleVendorInputChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="輸入 VID 或客戶名稱"
+              />
+              {showSuggestions && filteredVendors.length > 0 && (
+                <div className="absolute top-full left-0 mt-1 w-[360px] bg-white border border-kdc-border rounded-[5px] shadow-lg z-10 max-h-[200px] overflow-y-auto">
+                  {filteredVendors.map(v => (
+                    <div
+                      key={v.id}
+                      className="px-3 py-2 cursor-pointer hover:bg-[#e8f0f8] text-kdc-body flex items-center gap-3"
+                      onMouseDown={() => selectVendor(v)}
+                    >
+                      <span className="text-[#666] font-mono text-[13px]">{v.vid}</span>
+                      <span>{v.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className={labelCls}>備註 :</div>
           <div className={`${valCls} flex-1`}><textarea className="border border-kdc-border rounded-[5px] px-2.5 py-2 text-kdc-body font-kdc outline-none w-full resize-y min-h-[50px]" rows={2} value={f.notes} onChange={e => u("notes", e.target.value)} /></div>
