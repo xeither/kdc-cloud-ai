@@ -3,7 +3,7 @@ import {
   IconCustomer, IconSupplier, IconQuote, IconApplication,
   IconSearch, IconNotification, IconPublish, IconDocs,
   IconAdmin, IconSettings, IconCloudAi,
-} from '../icons';
+} from '../sidebar-icons';
 
 const sidebarItems = [
   { id: "customer", label: "客戶資訊", icon: IconCustomer, disabled: true },
@@ -37,9 +37,9 @@ export default function Sidebar() {
         return (
           <a
             key={item.id}
-            className={`flex items-center gap-3 py-3 px-[25px] text-kdc-sidebar no-underline cursor-pointer transition-colors duration-150
+            className={`flex items-center gap-3 py-3 px-[25px] text-kdc-sidebar no-underline cursor-pointer transition-colors duration-150 [&_svg]:w-5 [&_svg]:h-5
               ${active ? 'bg-kdc-sidebar-active text-kdc-primary' : 'text-white hover:bg-white/10'}
-              ${item.disabled ? 'opacity-40 pointer-events-none' : ''}`}
+              ${item.disabled ? 'cursor-default' : ''}`}
             onClick={() => !item.disabled && item.path && navigate(item.path)}
           >
             <Icon />

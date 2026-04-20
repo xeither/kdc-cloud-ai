@@ -1,0 +1,73 @@
+{
+  "$description": "KDC Internal Design Tokens — Tokens Studio compatible format. Extracted from wr-rd-kmp-aa.kalay.us on 2026-04-20. Single source of truth: this file → Tailwind @theme in index.css; future → Figma via Tokens Studio plugin.",
+  "$version": "1.0.0",
+  "color": {
+    "kdc": {
+      "primary": { "value": "#004480", "type": "color", "description": "Sidebar bg, active states, page titles" },
+      "primaryAlt": { "value": "#00437e", "type": "color", "description": "Buttons, table headers, tab selected text" },
+      "sidebarActive": { "value": "#f4f4f4", "type": "color", "description": "Active sidebar item bg" },
+      "bodyBg": { "value": "#f4f4f4", "type": "color", "description": "Main page background" },
+      "text": { "value": "#333333", "type": "color", "description": "Default body text" },
+      "tableHeader": { "value": "#00437e", "type": "color", "description": "Table column header text" },
+      "tableRowAlt": { "value": "#eff1f5", "type": "color", "description": "Alternating table row" },
+      "formLabel": { "value": "#d1deea", "type": "color", "description": "Form label bg (Section 1/4)" },
+      "formLabelDark": { "value": "rgba(144,184,224,0.89)", "type": "color", "description": "Form label bg (Section 2, darker)" },
+      "tabSelected": { "value": "#ffffff", "type": "color", "description": "Active tab bg" },
+      "tabUnselected": { "value": "#658db1", "type": "color", "description": "Inactive tab bg" },
+      "border": { "value": "#e1e7f1", "type": "color", "description": "Input/table borders" },
+      "required": { "value": "#f60b0b", "type": "color", "description": "Required field marker" },
+      "footerBg": { "value": "#eceff1", "type": "color" },
+      "footerText": { "value": "#9b9b9b", "type": "color" },
+      "brandOrange": { "value": "#e8652c", "type": "color", "description": "TUTK logo + header decoration" }
+    }
+  },
+  "fontFamily": {
+    "kdc": { "value": "PingFangTC, \"Helvetica Neue\", Helvetica, Arial, sans-serif", "type": "fontFamilies" }
+  },
+  "fontSize": {
+    "kdcBody": { "value": "14px", "type": "fontSizes" },
+    "kdcTable": { "value": "16px", "type": "fontSizes" },
+    "kdcTitle": { "value": "20.8px", "type": "fontSizes" },
+    "kdcSidebar": { "value": "16px", "type": "fontSizes" },
+    "kdcBtn": { "value": "16px", "type": "fontSizes" }
+  },
+  "sizing": {
+    "sidebar": { "value": "220px", "type": "sizing", "description": "Sidebar fixed width" },
+    "header": { "value": "80px", "type": "sizing", "description": "Header fixed height" }
+  },
+  "borderRadius": {
+    "btn": { "value": "20px", "type": "borderRadius", "description": "Pill button corner" },
+    "tab": { "value": "5px 5px 0 0", "type": "borderRadius", "description": "Tab top corners" },
+    "input": { "value": "5px", "type": "borderRadius" }
+  },
+  "component": {
+    "button": {
+      "primary": {
+        "bg": { "value": "{color.kdc.primaryAlt}", "type": "color" },
+        "text": { "value": "#ffffff", "type": "color" },
+        "radius": { "value": "{borderRadius.btn}", "type": "borderRadius" },
+        "padding": { "value": "8px 20px", "type": "spacing" }
+      },
+      "secondary": {
+        "bg": { "value": "#ffffff", "type": "color" },
+        "text": { "value": "{color.kdc.primary}", "type": "color" },
+        "border": { "value": "{color.kdc.primary}", "type": "color" }
+      }
+    },
+    "input": {
+      "height": { "value": "36px", "type": "sizing" },
+      "border": { "value": "{color.kdc.border}", "type": "color" },
+      "radius": { "value": "{borderRadius.input}", "type": "borderRadius" },
+      "padding": { "value": "1px 10px", "type": "spacing" }
+    },
+    "cloudAiSection": {
+      "border": { "value": "2px solid {color.kdc.primary}", "type": "border" },
+      "labelBg": { "value": "#e3f0fd", "type": "color" },
+      "bodyBg": { "value": "#ffffff", "type": "color" }
+    }
+  },
+  "asset": {
+    "logo": { "value": "/tutk-logo.png", "type": "asset", "description": "TUTK brand logo (propeller + TUTK wordmark)" },
+    "headerDecoration": { "value": "/header-decoration.png", "type": "asset", "description": "Orange triangle pattern in header top-right corner (135×80px)" }
+  }
+}
