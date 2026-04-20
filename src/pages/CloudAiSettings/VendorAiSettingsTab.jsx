@@ -125,83 +125,60 @@ export default function VendorAiSettingsTab() {
           Vendor 專屬區
         </h3>
 
-        <div className="mb-4 flex items-center gap-3">
-          <label className="text-kdc-body font-medium text-kdc-text">選擇 Vendor：</label>
-          <select
-            className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer focus:border-kdc-primary"
-            value={selectedVendor}
-            onChange={e => setSelectedVendor(e.target.value)}
-          >
-            {vendors.map(v => (
-              <option key={v.id} value={v.id}>{v.name} ({v.vid})</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          {/* Left: vendor-specific plans */}
-          <div>
-            <p className="text-kdc-body font-medium text-kdc-text mb-2">專屬方案</p>
-            <div className="border border-kdc-border rounded-[5px] min-h-[100px] p-3">
-              {(vs.specificPlans || []).length === 0 && (
-                <p className="text-kdc-body text-[#999] text-[13px]">無專屬方案</p>
-              )}
-              <div className="flex flex-wrap gap-1.5">
-                {(vs.specificPlans || []).map(pid => (
-                  <span
-                    key={pid}
-                    className="inline-flex items-center gap-1 bg-[#fff3e0] text-[#e65100] px-2.5 py-0.5 rounded-xl text-[13px] font-medium"
-                  >
-                    {planName(pid)}
-                    <button
-                      type="button"
-                      className="bg-transparent border-none cursor-pointer text-[#e65100] leading-none flex items-center hover:opacity-70"
-                      onClick={() => removeSpecificPlan(pid)}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              {addableSpecificPlans.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-kdc-border">
-                  <p className="text-[13px] text-[#999] mb-1.5">新增專屬方案：</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {addableSpecificPlans.map(plan => (
-                      <button
-                        key={plan.id}
-                        className="inline-flex items-center gap-1 bg-transparent border border-kdc-border text-kdc-text px-2.5 py-0.5 rounded-xl text-[13px] cursor-pointer hover:bg-[#e8f0f8]"
-                        onClick={() => addSpecificPlan(plan.id)}
-                      >
-                        <IconPlus /> {plan.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+        <div className="grid grid-cols-[auto_1fr] gap-6 items-start">
+          {/* Left: Vendor selector */}
+          <div className="flex items-center gap-3">
+            <label className="text-kdc-body font-medium text-kdc-text whitespace-nowrap">選擇 Vendor：</label>
+            <select
+              className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer focus:border-kdc-primary"
+              value={selectedVendor}
+              onChange={e => setSelectedVendor(e.target.value)}
+            >
+              {vendors.map(v => (
+                <option key={v.id} value={v.id}>{v.name} ({v.vid})</option>
+              ))}
+            </select>
           </div>
 
-          {/* Right: default plan selection */}
-          <div>
-            <p className="text-kdc-body font-medium text-kdc-text mb-2">預設方案</p>
-            <div className="border border-kdc-border rounded-[5px] p-3">
-              <select
-                className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                value={vs.defaultPlan || ""}
-                onChange={e => updateVS({ defaultPlan: e.target.value })}
-              >
-                <option value="">— 未設定 —</option>
-                {vendorAvailablePlans.map(pid => {
-                  const plan = aiPlans.find(p => p.id === pid);
-                  if (!plan) return null;
-                  return <option key={pid} value={pid}>{plan.name}</option>;
-                })}
-              </select>
-              {vs.defaultPlan && (
-                <p className="text-[13px] text-kdc-primary mt-2">&#10003; 目前預設：{planName(vs.defaultPlan)}</p>
-              )}
+          {/* Right: vendor-specific plans */}
+          <div className="border border-kdc-border rounded-[5px] min-h-[100px] p-3">
+            <p className="text-kdc-body font-medium text-kdc-text mb-2">專屬方案</p>
+            {(vs.specificPlans || []).length === 0 && (
+              <p className="text-kdc-body text-[#999] text-[13px]">無專屬方案</p>
+            )}
+            <div className="flex flex-wrap gap-1.5">
+              {(vs.specificPlans || []).map(pid => (
+                <span
+                  key={pid}
+                  className="inline-flex items-center gap-1 bg-[#fff3e0] text-[#e65100] px-2.5 py-0.5 rounded-xl text-[13px] font-medium"
+                >
+                  {planName(pid)}
+                  <button
+                    type="button"
+                    className="bg-transparent border-none cursor-pointer text-[#e65100] leading-none flex items-center hover:opacity-70"
+                    onClick={() => removeSpecificPlan(pid)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
+            {addableSpecificPlans.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-kdc-border">
+                <p className="text-[13px] text-[#999] mb-1.5">新增專屬方案：</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {addableSpecificPlans.map(plan => (
+                    <button
+                      key={plan.id}
+                      className="inline-flex items-center gap-1 bg-transparent border border-kdc-border text-kdc-text px-2.5 py-0.5 rounded-xl text-[13px] cursor-pointer hover:bg-[#e8f0f8]"
+                      onClick={() => addSpecificPlan(plan.id)}
+                    >
+                      <IconPlus /> {plan.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

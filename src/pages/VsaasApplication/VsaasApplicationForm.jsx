@@ -6,9 +6,10 @@ import Toggle from '../../components/Toggle';
 
 export default function VsaasApplicationForm() {
   const navigate = useNavigate();
-  const { aiPlans, globalPlans } = useCloudAi();
+  const { aiPlans, globalPlans, vendors, vendorSettings } = useCloudAi();
+  const [selectedVendorId, setSelectedVendorId] = useState("");
   const [f, setF] = useState({
-    vendorVid: "C220118039(5478/21624)", vendorName: "Tutk", salesPerson: "",
+    vendorId: "", salesPerson: "",
     serviceType: "test", piPoNo: "", region: [], paymentStatus: "prepaid",
     paymentRef: "", creditTerm: "", overdueStatus: "none", overdueCurrency: "USD", overdueAmount: "",
     recordType: "event", autoRenew: false, recordSeconds: "30", cycleDelete: true,
@@ -25,6 +26,18 @@ export default function VsaasApplicationForm() {
     u("region", cur.includes(r) ? cur.filter(x => x !== r) : [...cur, r]);
   };
   const planName = (id) => aiPlans.find(p => p.id === id)?.name || id;
+
+  // When vendor changes, update form vendorId and reset cloudAiPlan
+  const handleVendorChange = (vendorId) => {
+    setSelectedVendorId(vendorId);
+    u("vendorId", vendorId);
+    u("cloudAiPlan", "");
+  };
+
+  // Available AI Plans for selected vendor = global + vendor-specific
+  const selectedVendor = vendors.find(v => v.id === selectedVendorId);
+  const vs = vendorSettings[selectedVendorId] || { specificPlans: [], defaultPlan: "" };
+  const vendorAvailablePlans = [...globalPlans, ...(vs.specificPlans || [])];
 
   const labelCls = "bg-kdc-form-label px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
   const labelDarkCls = "bg-kdc-form-label-dark px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
@@ -51,7 +64,12 @@ export default function VsaasApplicationForm() {
         </div>
         <div className="flex border-b border-kdc-border">
           <div className={labelCls}><span className="text-kdc-required mr-0.5">*</span>客戶代碼(VID)/名稱 :</div>
-          <div className={`${valCls} flex-1`}><a href="#" className="text-kdc-primary">{f.vendorVid} {f.vendorName}</a></div>
+          <div className={`${valCls} flex-1`}>
+            <select className={`${selectCls} w-[300px]`} value={selectedVendorId} onChange={e => handleVendorChange(e.target.value)}>
+              <option value="">— 請選擇客戶 —</option>
+              {vendors.map(v => <option key={v.id} value={v.id}>{v.vid} {v.name}</option>)}
+            </select>
+          </div>
           <div className={labelCls}>備註 :</div>
           <div className={`${valCls} flex-1`}><textarea className="border border-kdc-border rounded-[5px] px-2.5 py-2 text-kdc-body font-kdc outline-none w-full resize-y min-h-[50px]" rows={2} value={f.notes} onChange={e => u("notes", e.target.value)} /></div>
         </div>
@@ -163,9 +181,10 @@ export default function VsaasApplicationForm() {
           <div className="flex">
             <div className="bg-[#e3f0fd] px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap"><span className="text-kdc-required mr-0.5">*</span>AI Plan :</div>
             <div className={valCls}>
-              <select className={`${selectCls} w-[300px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)}>
-                <option value="">— 請選擇 AI Plan —</option>
+              <select className={`${selectCls} w-[300px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedVendorId}>
+                <option value="">{selectedVendorId ? "— 請選擇 AI Plan —" : "— 請先選擇客戶 —"}</option>
                 {globalPlans.map(planId => <option key={planId} value={planId}>[共用] {planName(planId)}</option>)}
+                {(vs.specificPlans || []).map(planId => <option key={planId} value={planId}>[專屬] {planName(planId)}</option>)}
               </select>
               {f.cloudAiPlan && <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">{planName(f.cloudAiPlan)}</span>}
             </div>
