@@ -22,7 +22,8 @@ export default function AiPlansTab() {
   }
 
   function openNew() {
-    setForm({ ...EMPTY_FORM, prompts: [], vlmProfileId: vlmProfiles[0]?.id || "" });
+    const defaultPrompt = prompts.find(p => p.name === "中文場景描述");
+    setForm({ ...EMPTY_FORM, prompts: defaultPrompt ? [defaultPrompt.id] : [], vlmProfileId: vlmProfiles[0]?.id || "" });
     setEditing("new");
   }
 
@@ -58,7 +59,7 @@ export default function AiPlansTab() {
   }
 
   function save() {
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || (form.prompts || []).length === 0) return;
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
     if (editing === "new") {
       setAiPlans(prev => [...prev, {
@@ -74,7 +75,7 @@ export default function AiPlansTab() {
     closeModal();
   }
 
-  const isFormValid = form.name.trim();
+  const isFormValid = form.name.trim() && (form.prompts || []).length > 0;
 
   return (
     <div>
@@ -212,7 +213,7 @@ export default function AiPlansTab() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">Prompts</label>
+            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">Prompts <span className="text-kdc-required">*</span></label>
             <div className="border border-kdc-border rounded-[5px] max-h-[200px] overflow-y-auto">
               {prompts.map(p => {
                 const checked = (form.prompts || []).includes(p.id);
