@@ -22,7 +22,7 @@ export default function CloudAiSettings() {
               ${activeTab === i
                 ? 'bg-white text-kdc-primary-alt z-10'
                 : 'bg-kdc-tab-unselected text-white'}`}
-            style={{ transform: 'skew(-20deg) translateX(10%)' }}
+            style={{ transform: 'skew(-20deg)' }}
             onClick={() => setActiveTab(i)}
           >
             <span className="inline-block" style={{ transform: 'skew(20deg)' }}>{t}</span>
