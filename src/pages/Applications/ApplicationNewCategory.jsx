@@ -23,7 +23,7 @@ export default function ApplicationNewCategory() {
       <div className="space-y-2.5">
         {categories.map(row => (
           <div key={row.cat} className="bg-white rounded-[10px] h-[60px] grid grid-cols-[190px_1fr] items-center border-l-[15px] border-kdc-tab-unselected">
-            <div className="text-[16px] font-bold text-kdc-primary-alt text-center">{row.cat}</div>
+            <div className="text-[16px] font-bold text-kdc-primary-alt text-center border-r border-[#cccccc] h-full flex items-center justify-center">{row.cat}</div>
             <ul className="grid grid-cols-4 list-none m-0 pl-[15px]">
               {row.items.map(item => (
                 <li
