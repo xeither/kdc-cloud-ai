@@ -20,25 +20,27 @@ export default function ApplicationList() {
           <option>類型</option>
         </select>
         <input
-          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[140px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[169px]"
           placeholder="單號"
         />
         <input
-          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[169px]"
           placeholder="公司名稱"
         />
         <select className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[120px]">
           <option>狀態</option>
         </select>
         <input
-          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[120px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[82px]"
           placeholder="下一關"
         />
-        <span className="flex items-center gap-1">
-          <IconCalendar />
+        <span className="relative flex items-center">
+          <span className="absolute left-[10px] pointer-events-none text-kdc-text/70"><IconCalendar /></span>
           <input
-            className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
-            type="date"
+            className="h-9 border border-kdc-border rounded-[5px] pl-[34px] pr-[10px] text-kdc-table font-kdc outline-none w-[169px] bg-white"
+            type="text"
+            placeholder="過期日"
+            autoComplete="off"
           />
         </span>
         <button className="bg-kdc-primary-alt text-white rounded-btn h-9 px-[10px] min-w-[90px] text-kdc-btn border-none cursor-pointer hover:opacity-85 ml-auto">
