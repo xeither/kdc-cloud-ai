@@ -17,7 +17,9 @@ const sidebarItems = [
   { id: "admin", label: "管理員設定", icon: IconAdmin, disabled: true },
   { id: "settings", label: "設定", icon: IconSettings, disabled: true },
   { id: "cloud-ai", label: "Cloud AI 設定", icon: IconCloudAi, path: "/cloud-ai" },
-  { id: "design-system", label: "Design System", icon: IconSettings, path: "/design-system" },
+  // Design System entry hidden from sidebar — route still works at /design-system.
+  // Rationale: design assets live in Claude Design now (frames 00 + 08). Keeping
+  // the page as internal dev reference; if needed, re-add this entry.
 ];
 
 export default function Sidebar() {
