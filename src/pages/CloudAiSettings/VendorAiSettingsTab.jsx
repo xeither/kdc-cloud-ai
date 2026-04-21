@@ -29,7 +29,7 @@ export default function VendorAiSettingsTab() {
   }
 
   // Current vendor settings
-  const vs = vendorSettings[selectedVendor] || { specificPlans: [], defaultPlan: "" };
+  const vs = vendorSettings[selectedVendor] || { specificPlans: [] };
 
   function updateVS(patch) {
     setVendorSettings(prev => ({

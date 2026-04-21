@@ -58,7 +58,7 @@ export default function VsaasApplicationForm() {
   };
 
   // Available AI Plans for selected vendor = global + vendor-specific
-  const vs = vendorSettings[selectedVendorId] || { specificPlans: [], defaultPlan: "" };
+  const vs = vendorSettings[selectedVendorId] || { specificPlans: [] };
   const vendorAvailablePlans = [...globalPlans, ...(vs.specificPlans || [])];
 
   const labelCls = "bg-kdc-form-label px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";

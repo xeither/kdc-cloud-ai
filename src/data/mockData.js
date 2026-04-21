@@ -25,7 +25,7 @@ export const INITIAL_VENDORS = [
 export const INITIAL_GLOBAL_PLANS = ["plan-1", "plan-3"];
 
 export const INITIAL_VENDOR_SETTINGS = {
-  "v-1": { specificPlans: ["plan-2"], defaultPlan: "plan-1" },
-  "v-2": { specificPlans: [], defaultPlan: "plan-1" },
-  "v-3": { specificPlans: [], defaultPlan: "plan-3" },
+  "v-1": { specificPlans: ["plan-2"] },
+  "v-2": { specificPlans: [] },
+  "v-3": { specificPlans: [] },
 };
