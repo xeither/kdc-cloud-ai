@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useCloudAi } from '../../context/CloudAiContext';
-import { IconPlus, IconCalendar } from '../../icons';
+import { IconCalendar } from '../../icons';
 import Toggle from '../../components/Toggle';
 
 export default function VsaasApplicationForm() {
-  const navigate = useNavigate();
   const { aiPlans, globalPlans, vendors, vendorSettings } = useCloudAi();
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [vendorInput, setVendorInput] = useState("");
@@ -79,7 +77,7 @@ export default function VsaasApplicationForm() {
       </div>
 
       {/* Section 1: Basic Info */}
-      <div className="bg-white border border-kdc-border mb-4">
+      <div className="mb-4">
         <div className="flex border-b border-kdc-border">
           <div className={labelCls}>申請單號 :</div>
           <div className={`${valCls} flex-1`}><span className="text-[#999]">自動產生</span></div>
@@ -161,7 +159,7 @@ export default function VsaasApplicationForm() {
       </div>
 
       {/* Section 2: Service Config */}
-      <div className="bg-white border border-kdc-border mb-4">
+      <div className="mb-4">
         <div className="flex border-b border-kdc-border">
           <div className={labelDarkCls}><span className="text-kdc-required mr-0.5">*</span>類型 :</div>
           <div className={`${valCls} flex-1`}>
@@ -206,7 +204,11 @@ export default function VsaasApplicationForm() {
           <div className={`${valCls} flex-1 flex items-center gap-2`}>
             <input className={`${inputCls} w-[100px]`} type="number" value={f.quantity} onChange={e => u("quantity", Number(e.target.value))} />
             <span>個</span>
-            <button className="bg-kdc-primary-alt text-white w-7 h-7 p-0 flex items-center justify-center rounded-full border-none cursor-pointer"><IconPlus /></button>
+            <button className="text-kdc-primary-alt bg-transparent border-none cursor-pointer p-0 leading-none" title="新增">
+              <svg width={25} height={25} viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm192 472c0 4.4-3.6 8-8 8H544v152c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V544H328c-4.4 0-8-3.6-8-8v-48c0-4.4 3.6-8 8-8h152V328c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v152h152c4.4 0 8 3.6 8 8v48z"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -237,7 +239,7 @@ export default function VsaasApplicationForm() {
       </div>
 
       {/* Section 4: Purchase & Integration */}
-      <div className="bg-white border border-kdc-border mb-4">
+      <div className="mb-4">
         <div className="flex border-b border-kdc-border">
           <div className={labelCls}><span className="text-kdc-required mr-0.5">*</span>購買類型 :</div>
           <div className={valCls}>
@@ -268,10 +270,9 @@ export default function VsaasApplicationForm() {
       </div>
 
       {/* Buttons */}
-      <div className="flex justify-end gap-4 mt-6">
-        <button className="px-5 py-2 rounded-btn border border-kdc-primary bg-white text-kdc-primary text-kdc-btn cursor-pointer hover:opacity-85" onClick={() => navigate('/applications/new')}>返回</button>
-        <button className="px-5 py-2 rounded-btn border border-kdc-border bg-kdc-primary-alt text-white text-kdc-btn cursor-pointer hover:opacity-85">暫存</button>
-        <button className="px-5 py-2 rounded-btn border border-kdc-border bg-kdc-primary-alt text-white text-kdc-btn cursor-pointer hover:opacity-85">送出</button>
+      <div className="flex justify-end gap-[5px] mt-6">
+        <button className="w-[120px] h-[35px] rounded-btn bg-kdc-primary-alt text-white text-kdc-btn cursor-pointer hover:opacity-85">暫存</button>
+        <button className="w-[120px] h-[35px] rounded-btn bg-kdc-primary-alt text-white text-kdc-btn cursor-pointer hover:opacity-85">送出</button>
       </div>
     </div>
   );
