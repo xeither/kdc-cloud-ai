@@ -38,21 +38,31 @@ npm run build:tokens-studio
 
 In Figma: Tokens Studio plugin → Tools → Load from file → pick the updated JSON → Apply.
 
-## Frames to create in Figma
+## Frames (auto-generated)
 
-Use screenshots from localhost or the live prototype (`https://kdc-cloud-ai-config.zeabur.app`) as reference. Suggested frames:
+Run `npm run figma:frames` to regenerate all PNG frames from `localhost:5173`. Output:
 
-| Frame | Reference |
-|---|---|
-| Login (not in scope, omit) | — |
-| Application list | `/applications` |
-| New application — category picker | `/applications/new` |
-| VSaaS application form (full) | `/applications/new/vsaas` |
-| Cloud AI Settings — VLM Profiles tab | `/cloud-ai` (tab 1) |
-| Cloud AI Settings — Prompts tab | `/cloud-ai` (tab 2) |
-| Cloud AI Settings — AI Plans tab | `/cloud-ai` (tab 3) |
-| Cloud AI Settings — Vendor AI Settings tab | `/cloud-ai` (tab 4) |
-| Design System reference | `/design-system` |
+```
+figma/frames/
+├── manifest.json              ← page list + metadata
+├── 1440x900/                  ← standard canvas
+│   ├── application-list.png
+│   ├── new-application.png
+│   ├── vsaas-form.png
+│   ├── cloud-ai-vlm-profiles.png
+│   ├── cloud-ai-prompts.png
+│   ├── cloud-ai-plans.png
+│   ├── cloud-ai-vendor.png
+│   └── design-system.png
+└── 1920x1080/                 ← wide canvas (same pages)
+```
+
+Designer delivery pattern (mirrors `SK_VMS_Web_Vendor/Dealer` example):
+
+1. Drag each PNG into Figma as an image-backed frame at its native size
+2. Label each frame with its title from `manifest.json` (e.g., "申請單管理 — 新增 VSaaS 使用申請單")
+3. Group frames into pages: **申請單管理**, **Cloud AI 設定**, **Design System**
+4. (Optional, but recommended for editable frames) install `html.to.design` plugin and re-import from the live Zeabur URL — PNG frames remain as fallback/reference
 
 ## Token naming convention
 

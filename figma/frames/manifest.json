@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-04-21T03:51:04.843Z",
+  "base": "http://localhost:5173",
+  "sizes": [
+    "1440x900",
+    "1920x1080"
+  ],
+  "pages": [
+    {
+      "id": "application-list",
+      "path": "/applications",
+      "title": "申請單管理 — 申請單列表"
+    },
+    {
+      "id": "new-application",
+      "path": "/applications/new",
+      "title": "申請單管理 — 新增申請單"
+    },
+    {
+      "id": "vsaas-form",
+      "path": "/applications/new/vsaas",
+      "title": "申請單管理 — 新增 VSaaS 使用申請單"
+    },
+    {
+      "id": "cloud-ai-vlm-profiles",
+      "path": "/cloud-ai",
+      "title": "Cloud AI 設定 — VLM Profiles"
+    },
+    {
+      "id": "cloud-ai-prompts",
+      "path": "/cloud-ai",
+      "title": "Cloud AI 設定 — Prompts"
+    },
+    {
+      "id": "cloud-ai-plans",
+      "path": "/cloud-ai",
+      "title": "Cloud AI 設定 — AI Plans"
+    },
+    {
+      "id": "cloud-ai-vendor",
+      "path": "/cloud-ai",
+      "title": "Cloud AI 設定 — Vendor AI"
+    },
+    {
+      "id": "design-system",
+      "path": "/design-system",
+      "title": "Design System"
+    }
+  ]
+}

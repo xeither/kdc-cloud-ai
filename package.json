@@ -12,7 +12,8 @@
     "build:tokens-studio": "node scripts/build-tokens-studio.mjs",
     "auth:kdc": "node scripts/auth-kdc.mjs",
     "diff:dom": "node scripts/dom-diff.mjs",
-    "diff:pixel": "node scripts/pixel-diff.mjs"
+    "diff:pixel": "node scripts/pixel-diff.mjs",
+    "figma:frames": "node scripts/capture-figma-frames.mjs"
   },
   "dependencies": {
     "react": "^19.2.4",
