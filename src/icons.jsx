@@ -69,7 +69,13 @@ export function IconLogout() {
   );
 }
 export function IconCalendar() {
-  return <svg {...svgProps16}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  /* KDC filled calendar icon (25x25, viewBox 0 0 24 24) */
+  return (
+    <svg width={25} height={25} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 11h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2z"/>
+      <path d="M5 22h14c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2h-2V2h-2v2H9V2H7v2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2zM19 8l.001 12H5V8h14z"/>
+    </svg>
+  );
 }
 export function IconArrowUp() {
   return <svg {...svgProps14}><polyline points="18 15 12 9 6 15"/></svg>;
