@@ -8,7 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve dist -s -l 8080"
+    "start": "serve dist -s -l 8080",
+    "build:tokens-studio": "node scripts/build-tokens-studio.mjs",
+    "auth:kdc": "node scripts/auth-kdc.mjs",
+    "diff:dom": "node scripts/dom-diff.mjs",
+    "diff:pixel": "node scripts/pixel-diff.mjs"
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -29,6 +33,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.59.1",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4.2.2",
     "vite": "^5.4.19"
   }

@@ -26,3 +26,10 @@ dist-ssr
 # MCP config (local only)
 .mcp.json
 .mcp.json.bak
+
+# Auth sessions for diff scripts (contains KDC cookies — never commit)
+.auth/
+
+# Diff outputs (regenerated on demand)
+figma/dom-diff-*.json
+figma/pixel-diff-*/

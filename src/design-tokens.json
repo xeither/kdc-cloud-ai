@@ -1,6 +1,6 @@
 {
   "$description": "KDC Internal Design Tokens — Tokens Studio compatible format. Extracted from wr-rd-kmp-aa.kalay.us on 2026-04-20. Single source of truth: this file → Tailwind @theme in index.css; future → Figma via Tokens Studio plugin.",
-  "$version": "1.0.0",
+  "$version": "1.1.0",
   "color": {
     "kdc": {
       "primary": { "value": "#004480", "type": "color", "description": "Sidebar bg, active states, page titles" },
@@ -27,13 +27,25 @@
   "fontSize": {
     "kdcBody": { "value": "14px", "type": "fontSizes" },
     "kdcTable": { "value": "16px", "type": "fontSizes" },
-    "kdcTitle": { "value": "20.8px", "type": "fontSizes" },
+    "kdcTitle": { "value": "20.8px", "type": "fontSizes", "description": "Page/section title (e.g. 申請單列表)" },
     "kdcSidebar": { "value": "16px", "type": "fontSizes" },
-    "kdcBtn": { "value": "16px", "type": "fontSizes" }
+    "kdcBtn": { "value": "16px", "type": "fontSizes" },
+    "kdcNavbarProduct": { "value": "23px", "type": "fontSizes", "description": "Header 'KDC Internal' product name" },
+    "kdcEmail": { "value": "18px", "type": "fontSizes", "description": "Header user email" }
+  },
+  "fontWeight": {
+    "regular": { "value": "400", "type": "fontWeights" },
+    "medium": { "value": "500", "type": "fontWeights" },
+    "semibold": { "value": "600", "type": "fontWeights", "description": "Product name, titles" }
   },
   "sizing": {
     "sidebar": { "value": "220px", "type": "sizing", "description": "Sidebar fixed width" },
-    "header": { "value": "80px", "type": "sizing", "description": "Header fixed height" }
+    "header": { "value": "82px", "type": "sizing", "description": "Header fixed height (measured on KDC)" },
+    "footer": { "value": "56px", "type": "sizing", "description": "Footer height, full-width fixed at bottom" },
+    "iconLogout": { "value": "32px", "type": "sizing", "description": "Logout icon (KDC uses 32x32 viewBox)" },
+    "iconHamburger": { "value": "25px", "type": "sizing" },
+    "iconSidebar": { "value": "18px", "type": "sizing", "description": "Sidebar nav icons" },
+    "logoHeight": { "value": "47px", "type": "sizing", "description": "TUTK logo displayed height" }
   },
   "borderRadius": {
     "btn": { "value": "20px", "type": "borderRadius", "description": "Pill button corner" },
@@ -41,6 +53,65 @@
     "input": { "value": "5px", "type": "borderRadius" }
   },
   "component": {
+    "header": {
+      "bg": { "value": "#ffffff", "type": "color" },
+      "height": { "value": "{sizing.header}", "type": "sizing" },
+      "borderBottom": { "value": "1px solid #e0e0e0", "type": "border" },
+      "decorationPosition": { "value": "100% 100%", "type": "other", "description": "Top-right orange geometric pattern" },
+      "productName": {
+        "text": { "value": "KDC Internal", "type": "other" },
+        "fontSize": { "value": "{fontSize.kdcNavbarProduct}", "type": "fontSizes" },
+        "fontWeight": { "value": "{fontWeight.semibold}", "type": "fontWeights" },
+        "color": { "value": "{color.kdc.text}", "type": "color" },
+        "marginLeft": { "value": "10px", "type": "spacing" }
+      },
+      "email": {
+        "fontSize": { "value": "{fontSize.kdcEmail}", "type": "fontSizes" },
+        "fontWeight": { "value": "{fontWeight.regular}", "type": "fontWeights" },
+        "color": { "value": "{color.kdc.text}", "type": "color" }
+      }
+    },
+    "sidebar": {
+      "bg": { "value": "{color.kdc.primary}", "type": "color" },
+      "width": { "value": "{sizing.sidebar}", "type": "sizing" },
+      "paddingTop": { "value": "90px", "type": "spacing" },
+      "paddingLeft": { "value": "20px", "type": "spacing" },
+      "item": {
+        "fontSize": { "value": "{fontSize.kdcSidebar}", "type": "fontSizes" },
+        "paddingY": { "value": "10px", "type": "spacing" },
+        "paddingLeft": { "value": "25px", "type": "spacing" },
+        "gap": { "value": "15px", "type": "spacing" },
+        "borderRadiusLeft": { "value": "50px", "type": "borderRadius", "description": "Pill shape on left side when active" },
+        "activeBg": { "value": "{color.kdc.sidebarActive}", "type": "color" },
+        "activeText": { "value": "{color.kdc.primary}", "type": "color" },
+        "activeWeight": { "value": "{fontWeight.medium}", "type": "fontWeights" }
+      }
+    },
+    "footer": {
+      "bg": { "value": "{color.kdc.footerBg}", "type": "color" },
+      "text": { "value": "{color.kdc.footerText}", "type": "color" },
+      "height": { "value": "{sizing.footer}", "type": "sizing" },
+      "position": { "value": "fixed bottom full-width", "type": "other", "description": "z-index higher than sidebar so it covers sidebar bottom" },
+      "zIndex": { "value": "110", "type": "other" }
+    },
+    "tab": {
+      "bg": { "value": "{color.kdc.tabUnselected}", "type": "color" },
+      "activeBg": { "value": "{color.kdc.tabSelected}", "type": "color" },
+      "activeText": { "value": "{color.kdc.primaryAlt}", "type": "color" },
+      "text": { "value": "#ffffff", "type": "color" },
+      "fontSize": { "value": "{fontSize.kdcTable}", "type": "fontSizes" },
+      "padding": { "value": "6px 16px", "type": "spacing" },
+      "marginRight": { "value": "5px", "type": "spacing" },
+      "minWidth": { "value": "50px", "type": "sizing" },
+      "skew": { "value": "-20deg", "type": "other", "description": "Folder-tab shape via CSS transform" },
+      "borderRadiusTop": { "value": "10px", "type": "borderRadius" }
+    },
+    "tabContent": {
+      "bg": { "value": "#fafafa", "type": "color" },
+      "padding": { "value": "10px", "type": "spacing" },
+      "radius": { "value": "10px", "type": "borderRadius" },
+      "minHeight": { "value": "400px", "type": "sizing" }
+    },
     "button": {
       "primary": {
         "bg": { "value": "{color.kdc.primaryAlt}", "type": "color" },

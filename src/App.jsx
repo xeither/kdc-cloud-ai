@@ -5,6 +5,7 @@ import CloudAiSettings from './pages/CloudAiSettings/CloudAiSettings';
 import ApplicationList from './pages/Applications/ApplicationList';
 import ApplicationNewCategory from './pages/Applications/ApplicationNewCategory';
 import VsaasApplicationForm from './pages/VsaasApplication/VsaasApplicationForm';
+import DesignSystem from './pages/DesignSystem/DesignSystem';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="applications" element={<ApplicationList />} />
             <Route path="applications/new" element={<ApplicationNewCategory />} />
             <Route path="applications/new/vsaas" element={<VsaasApplicationForm />} />
+            <Route path="design-system" element={<DesignSystem />} />
           </Route>
         </Routes>
       </BrowserRouter>

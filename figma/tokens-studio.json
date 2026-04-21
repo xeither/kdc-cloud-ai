@@ -1,0 +1,473 @@
+{
+  "global": {
+    "color": {
+      "kdc": {
+        "primary": {
+          "value": "#004480",
+          "type": "color",
+          "description": "Sidebar bg, active states, page titles"
+        },
+        "primaryAlt": {
+          "value": "#00437e",
+          "type": "color",
+          "description": "Buttons, table headers, tab selected text"
+        },
+        "sidebarActive": {
+          "value": "#f4f4f4",
+          "type": "color",
+          "description": "Active sidebar item bg"
+        },
+        "bodyBg": {
+          "value": "#f4f4f4",
+          "type": "color",
+          "description": "Main page background"
+        },
+        "text": {
+          "value": "#333333",
+          "type": "color",
+          "description": "Default body text"
+        },
+        "tableHeader": {
+          "value": "#00437e",
+          "type": "color",
+          "description": "Table column header text"
+        },
+        "tableRowAlt": {
+          "value": "#eff1f5",
+          "type": "color",
+          "description": "Alternating table row"
+        },
+        "formLabel": {
+          "value": "#d1deea",
+          "type": "color",
+          "description": "Form label bg (Section 1/4)"
+        },
+        "formLabelDark": {
+          "value": "rgba(144,184,224,0.89)",
+          "type": "color",
+          "description": "Form label bg (Section 2, darker)"
+        },
+        "tabSelected": {
+          "value": "#ffffff",
+          "type": "color",
+          "description": "Active tab bg"
+        },
+        "tabUnselected": {
+          "value": "#658db1",
+          "type": "color",
+          "description": "Inactive tab bg"
+        },
+        "border": {
+          "value": "#e1e7f1",
+          "type": "color",
+          "description": "Input/table borders"
+        },
+        "required": {
+          "value": "#f60b0b",
+          "type": "color",
+          "description": "Required field marker"
+        },
+        "footerBg": {
+          "value": "#eceff1",
+          "type": "color"
+        },
+        "footerText": {
+          "value": "#9b9b9b",
+          "type": "color"
+        },
+        "brandOrange": {
+          "value": "#e8652c",
+          "type": "color",
+          "description": "TUTK logo + header decoration"
+        }
+      }
+    },
+    "fontFamily": {
+      "kdc": {
+        "value": "PingFangTC, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "type": "fontFamilies"
+      }
+    },
+    "fontSize": {
+      "kdcBody": {
+        "value": "14px",
+        "type": "fontSizes"
+      },
+      "kdcTable": {
+        "value": "16px",
+        "type": "fontSizes"
+      },
+      "kdcTitle": {
+        "value": "20.8px",
+        "type": "fontSizes",
+        "description": "Page/section title (e.g. 申請單列表)"
+      },
+      "kdcSidebar": {
+        "value": "16px",
+        "type": "fontSizes"
+      },
+      "kdcBtn": {
+        "value": "16px",
+        "type": "fontSizes"
+      },
+      "kdcNavbarProduct": {
+        "value": "23px",
+        "type": "fontSizes",
+        "description": "Header 'KDC Internal' product name"
+      },
+      "kdcEmail": {
+        "value": "18px",
+        "type": "fontSizes",
+        "description": "Header user email"
+      }
+    },
+    "fontWeight": {
+      "regular": {
+        "value": "400",
+        "type": "fontWeights"
+      },
+      "medium": {
+        "value": "500",
+        "type": "fontWeights"
+      },
+      "semibold": {
+        "value": "600",
+        "type": "fontWeights",
+        "description": "Product name, titles"
+      }
+    },
+    "sizing": {
+      "sidebar": {
+        "value": "220px",
+        "type": "sizing",
+        "description": "Sidebar fixed width"
+      },
+      "header": {
+        "value": "82px",
+        "type": "sizing",
+        "description": "Header fixed height (measured on KDC)"
+      },
+      "footer": {
+        "value": "56px",
+        "type": "sizing",
+        "description": "Footer height, full-width fixed at bottom"
+      },
+      "iconLogout": {
+        "value": "32px",
+        "type": "sizing",
+        "description": "Logout icon (KDC uses 32x32 viewBox)"
+      },
+      "iconHamburger": {
+        "value": "25px",
+        "type": "sizing"
+      },
+      "iconSidebar": {
+        "value": "18px",
+        "type": "sizing",
+        "description": "Sidebar nav icons"
+      },
+      "logoHeight": {
+        "value": "47px",
+        "type": "sizing",
+        "description": "TUTK logo displayed height"
+      }
+    },
+    "borderRadius": {
+      "btn": {
+        "value": "20px",
+        "type": "borderRadius",
+        "description": "Pill button corner"
+      },
+      "tab": {
+        "value": "5px 5px 0 0",
+        "type": "borderRadius",
+        "description": "Tab top corners"
+      },
+      "input": {
+        "value": "5px",
+        "type": "borderRadius"
+      }
+    },
+    "component": {
+      "header": {
+        "bg": {
+          "value": "#ffffff",
+          "type": "color"
+        },
+        "height": {
+          "value": "{sizing.header}",
+          "type": "sizing"
+        },
+        "borderBottom": {
+          "value": "1px solid #e0e0e0",
+          "type": "border"
+        },
+        "decorationPosition": {
+          "value": "100% 100%",
+          "type": "other",
+          "description": "Top-right orange geometric pattern"
+        },
+        "productName": {
+          "text": {
+            "value": "KDC Internal",
+            "type": "other"
+          },
+          "fontSize": {
+            "value": "{fontSize.kdcNavbarProduct}",
+            "type": "fontSizes"
+          },
+          "fontWeight": {
+            "value": "{fontWeight.semibold}",
+            "type": "fontWeights"
+          },
+          "color": {
+            "value": "{color.kdc.text}",
+            "type": "color"
+          },
+          "marginLeft": {
+            "value": "10px",
+            "type": "spacing"
+          }
+        },
+        "email": {
+          "fontSize": {
+            "value": "{fontSize.kdcEmail}",
+            "type": "fontSizes"
+          },
+          "fontWeight": {
+            "value": "{fontWeight.regular}",
+            "type": "fontWeights"
+          },
+          "color": {
+            "value": "{color.kdc.text}",
+            "type": "color"
+          }
+        }
+      },
+      "sidebar": {
+        "bg": {
+          "value": "{color.kdc.primary}",
+          "type": "color"
+        },
+        "width": {
+          "value": "{sizing.sidebar}",
+          "type": "sizing"
+        },
+        "paddingTop": {
+          "value": "90px",
+          "type": "spacing"
+        },
+        "paddingLeft": {
+          "value": "20px",
+          "type": "spacing"
+        },
+        "item": {
+          "fontSize": {
+            "value": "{fontSize.kdcSidebar}",
+            "type": "fontSizes"
+          },
+          "paddingY": {
+            "value": "10px",
+            "type": "spacing"
+          },
+          "paddingLeft": {
+            "value": "25px",
+            "type": "spacing"
+          },
+          "gap": {
+            "value": "15px",
+            "type": "spacing"
+          },
+          "borderRadiusLeft": {
+            "value": "50px",
+            "type": "borderRadius",
+            "description": "Pill shape on left side when active"
+          },
+          "activeBg": {
+            "value": "{color.kdc.sidebarActive}",
+            "type": "color"
+          },
+          "activeText": {
+            "value": "{color.kdc.primary}",
+            "type": "color"
+          },
+          "activeWeight": {
+            "value": "{fontWeight.medium}",
+            "type": "fontWeights"
+          }
+        }
+      },
+      "footer": {
+        "bg": {
+          "value": "{color.kdc.footerBg}",
+          "type": "color"
+        },
+        "text": {
+          "value": "{color.kdc.footerText}",
+          "type": "color"
+        },
+        "height": {
+          "value": "{sizing.footer}",
+          "type": "sizing"
+        },
+        "position": {
+          "value": "fixed bottom full-width",
+          "type": "other",
+          "description": "z-index higher than sidebar so it covers sidebar bottom"
+        },
+        "zIndex": {
+          "value": "110",
+          "type": "other"
+        }
+      },
+      "tab": {
+        "bg": {
+          "value": "{color.kdc.tabUnselected}",
+          "type": "color"
+        },
+        "activeBg": {
+          "value": "{color.kdc.tabSelected}",
+          "type": "color"
+        },
+        "activeText": {
+          "value": "{color.kdc.primaryAlt}",
+          "type": "color"
+        },
+        "text": {
+          "value": "#ffffff",
+          "type": "color"
+        },
+        "fontSize": {
+          "value": "{fontSize.kdcTable}",
+          "type": "fontSizes"
+        },
+        "padding": {
+          "value": "6px 16px",
+          "type": "spacing"
+        },
+        "marginRight": {
+          "value": "5px",
+          "type": "spacing"
+        },
+        "minWidth": {
+          "value": "50px",
+          "type": "sizing"
+        },
+        "skew": {
+          "value": "-20deg",
+          "type": "other",
+          "description": "Folder-tab shape via CSS transform"
+        },
+        "borderRadiusTop": {
+          "value": "10px",
+          "type": "borderRadius"
+        }
+      },
+      "tabContent": {
+        "bg": {
+          "value": "#fafafa",
+          "type": "color"
+        },
+        "padding": {
+          "value": "10px",
+          "type": "spacing"
+        },
+        "radius": {
+          "value": "10px",
+          "type": "borderRadius"
+        },
+        "minHeight": {
+          "value": "400px",
+          "type": "sizing"
+        }
+      },
+      "button": {
+        "primary": {
+          "bg": {
+            "value": "{color.kdc.primaryAlt}",
+            "type": "color"
+          },
+          "text": {
+            "value": "#ffffff",
+            "type": "color"
+          },
+          "radius": {
+            "value": "{borderRadius.btn}",
+            "type": "borderRadius"
+          },
+          "padding": {
+            "value": "8px 20px",
+            "type": "spacing"
+          }
+        },
+        "secondary": {
+          "bg": {
+            "value": "#ffffff",
+            "type": "color"
+          },
+          "text": {
+            "value": "{color.kdc.primary}",
+            "type": "color"
+          },
+          "border": {
+            "value": "{color.kdc.primary}",
+            "type": "color"
+          }
+        }
+      },
+      "input": {
+        "height": {
+          "value": "36px",
+          "type": "sizing"
+        },
+        "border": {
+          "value": "{color.kdc.border}",
+          "type": "color"
+        },
+        "radius": {
+          "value": "{borderRadius.input}",
+          "type": "borderRadius"
+        },
+        "padding": {
+          "value": "1px 10px",
+          "type": "spacing"
+        }
+      },
+      "cloudAiSection": {
+        "border": {
+          "value": "2px solid {color.kdc.primary}",
+          "type": "border"
+        },
+        "labelBg": {
+          "value": "#e3f0fd",
+          "type": "color"
+        },
+        "bodyBg": {
+          "value": "#ffffff",
+          "type": "color"
+        }
+      }
+    },
+    "asset": {
+      "logo": {
+        "value": "/tutk-logo.png",
+        "type": "asset",
+        "description": "TUTK brand logo (propeller + TUTK wordmark)"
+      },
+      "headerDecoration": {
+        "value": "/header-decoration.png",
+        "type": "asset",
+        "description": "Orange triangle pattern in header top-right corner (135×80px)"
+      }
+    }
+  },
+  "$themes": [],
+  "$metadata": {
+    "tokenSetOrder": [
+      "global"
+    ],
+    "sourceVersion": "1.1.0",
+    "generatedAt": "2026-04-20T16:00:43.783Z",
+    "sourceFile": "src/design-tokens.json"
+  }
+}

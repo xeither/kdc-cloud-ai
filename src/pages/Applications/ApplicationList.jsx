@@ -9,13 +9,13 @@ export default function ApplicationList() {
       <div className="flex justify-between items-center">
         <h2 className="text-kdc-title font-medium text-kdc-primary">申請單列表</h2>
         <button
-          className="bg-kdc-primary-alt text-white rounded-btn px-5 py-2 text-kdc-btn border border-kdc-border cursor-pointer inline-flex items-center gap-1.5 hover:opacity-85"
+          className="bg-kdc-primary-alt text-white rounded-btn h-9 px-[10px] min-w-[90px] text-kdc-btn border border-kdc-border cursor-pointer inline-flex items-center gap-1.5 hover:opacity-85"
           onClick={() => navigate('/applications/new')}
         >
           <IconPlus /> 新增
         </button>
       </div>
-      <div className="flex gap-3 items-center mb-4 bg-white px-4 py-3 border border-kdc-border rounded mt-5">
+      <div className="flex gap-3 items-center mb-4 bg-white px-4 py-3 border border-kdc-border rounded mt-[45px]">
         <select className="h-9 border border-kdc-border rounded-btn px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[140px]">
           <option>類型</option>
         </select>
@@ -41,10 +41,10 @@ export default function ApplicationList() {
             type="date"
           />
         </span>
-        <button className="bg-kdc-primary-alt text-white rounded-btn px-5 py-2 text-kdc-btn border-none cursor-pointer hover:opacity-85 ml-auto">
+        <button className="bg-kdc-primary-alt text-white rounded-btn h-9 px-[10px] min-w-[90px] text-kdc-btn border-none cursor-pointer hover:opacity-85 ml-auto">
           待簽核
         </button>
-        <button className="bg-kdc-primary-alt text-white rounded-btn px-5 py-2 text-kdc-btn border-none cursor-pointer hover:opacity-85">
+        <button className="bg-kdc-primary-alt text-white rounded-btn h-9 px-[10px] min-w-[90px] text-kdc-btn border-none cursor-pointer hover:opacity-85">
           查詢
         </button>
       </div>

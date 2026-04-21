@@ -19,24 +19,22 @@ export default function ApplicationNewCategory() {
 
   return (
     <div>
-      <h2 className="text-kdc-title font-medium text-kdc-primary mb-5">新增申請單</h2>
-      <div className="flex flex-col bg-white border border-kdc-border">
+      <h2 className="text-kdc-title font-medium text-kdc-primary mb-[37px]">新增申請單</h2>
+      <div className="space-y-2.5">
         {categories.map(row => (
-          <div key={row.cat} className="flex border-b border-kdc-border last:border-b-0 min-h-[56px]">
-            <div className="w-[160px] flex items-center justify-center text-kdc-table font-medium text-kdc-primary border-r border-kdc-border bg-[#fafbfc]">
-              {row.cat}
-            </div>
-            <div className="flex-1 flex items-center gap-12 px-6 py-3 flex-wrap">
+          <div key={row.cat} className="bg-white rounded-[10px] h-[60px] grid grid-cols-[190px_1fr] items-center border-l-[15px] border-kdc-tab-unselected">
+            <div className="text-[16px] font-bold text-kdc-primary-alt text-center">{row.cat}</div>
+            <ul className="grid grid-cols-4 list-none m-0 pl-[15px]">
               {row.items.map(item => (
-                <a
+                <li
                   key={item.label}
-                  className={`text-[15px] no-underline py-1 ${item.action ? 'text-kdc-text cursor-pointer hover:text-kdc-primary hover:underline' : 'text-[#aaa] cursor-default'}`}
                   onClick={item.action ? () => navigate('/applications/new/vsaas') : undefined}
+                  className="text-[16px] font-normal text-kdc-primary-alt cursor-pointer hover:underline"
                 >
                   {item.label}
-                </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         ))}
       </div>

@@ -17,6 +17,7 @@ const sidebarItems = [
   { id: "admin", label: "管理員設定", icon: IconAdmin, disabled: true },
   { id: "settings", label: "設定", icon: IconSettings, disabled: true },
   { id: "cloud-ai", label: "Cloud AI 設定", icon: IconCloudAi, path: "/cloud-ai" },
+  { id: "design-system", label: "Design System", icon: IconSettings, path: "/design-system" },
 ];
 
 export default function Sidebar() {
@@ -30,15 +31,15 @@ export default function Sidebar() {
   };
 
   return (
-    <nav className="kdc-sidebar fixed top-0 left-0 bottom-0 w-sidebar bg-kdc-primary pt-[90px] pl-[20px] z-[90] overflow-y-auto">
+    <nav className="kdc-sidebar fixed top-0 left-0 bottom-0 w-sidebar bg-kdc-primary pt-[80px] pl-[10px] z-[90] overflow-y-auto">
       {sidebarItems.map(item => {
         const Icon = item.icon;
         const active = isActive(item);
         return (
           <a
             key={item.id}
-            className={`flex items-center gap-[15px] py-[10px] pl-[25px] pr-[10px] text-kdc-sidebar no-underline cursor-pointer transition-colors duration-150 rounded-l-[50px] [&_svg]:w-[18px] [&_svg]:h-[18px]
-              ${active ? 'bg-kdc-sidebar-active text-kdc-primary font-medium' : 'text-white hover:bg-white/10'}
+            className={`flex items-center gap-[15px] w-[210px] h-[47px] mb-[5px] pl-[25px] pr-[10px] text-kdc-sidebar no-underline cursor-pointer transition-colors duration-150 rounded-l-[50px] [&_svg]:w-[18px] [&_svg]:h-[18px]
+              ${active ? 'bg-kdc-sidebar-active text-kdc-primary' : 'text-white hover:bg-white/10'}
               ${item.disabled ? 'cursor-default' : ''}`}
             onClick={() => !item.disabled && item.path && navigate(item.path)}
           >
