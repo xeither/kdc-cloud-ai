@@ -15,29 +15,29 @@ export default function ApplicationList() {
           <IconPlus /> 新增
         </button>
       </div>
-      <div className="flex gap-3 items-center mb-4 bg-white px-4 py-3 border border-kdc-border rounded mt-[45px]">
-        <select className="h-9 border border-kdc-border rounded-btn px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[140px]">
+      <div className="flex gap-3 items-center mb-4 bg-[#fafafa] p-[10px] rounded-[10px] mt-[45px]">
+        <select className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[140px]">
           <option>類型</option>
         </select>
         <input
-          className="h-9 border border-kdc-border rounded-btn px-2.5 text-kdc-table font-kdc outline-none w-[140px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[140px]"
           placeholder="單號"
         />
         <input
-          className="h-9 border border-kdc-border rounded-btn px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
           placeholder="公司名稱"
         />
-        <select className="h-9 border border-kdc-border rounded-btn px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[120px]">
+        <select className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-[120px]">
           <option>狀態</option>
         </select>
         <input
-          className="h-9 border border-kdc-border rounded-btn px-2.5 text-kdc-table font-kdc outline-none w-[120px]"
+          className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[120px]"
           placeholder="下一關"
         />
         <span className="flex items-center gap-1">
           <IconCalendar />
           <input
-            className="h-9 border border-kdc-border rounded-btn px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
+            className="h-9 border border-kdc-border rounded-[5px] px-2.5 text-kdc-table font-kdc outline-none w-[160px]"
             type="date"
           />
         </span>
@@ -48,7 +48,7 @@ export default function ApplicationList() {
           查詢
         </button>
       </div>
-      <div className="text-center py-20 text-[#ccc] text-lg">查詢申請單列表</div>
+      <div className="text-center py-20 text-[#DBDBDB] text-[30px]">查詢申請單列表</div>
     </div>
   );
 }
