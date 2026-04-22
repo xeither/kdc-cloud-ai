@@ -204,34 +204,30 @@ export default function VendorAiSettingsTab() {
             <Pagination total={vendors.length} />
           </div>
 
-          {/* Right: draggable available plans */}
-          <aside className="border border-kdc-border rounded-[5px] bg-white sticky top-[100px]">
-            <div className="px-3 py-2 border-b border-kdc-border bg-[#fafafa]">
-              <p className="text-kdc-body font-medium text-kdc-text">可選的專屬方案</p>
-              <p className="text-[11px] text-[#999]">按住方案拖曳到左側 Vendor</p>
+          {/* Right: draggable available plans — KDC 管理員設定「帳號」面板同款 */}
+          <aside className="sticky top-[100px]">
+            <p className="text-kdc-table font-medium text-kdc-text text-center mb-2">專屬方案</p>
+            <div className="border border-kdc-border rounded-[5px] bg-white">
+              {availablePlans.length === 0 ? (
+                <p className="px-3 py-6 text-center text-[13px] text-[#999]">
+                  所有方案已在共用區
+                </p>
+              ) : (
+                <ul className="list-none m-0 p-0">
+                  {availablePlans.map((plan, i) => (
+                    <li
+                      key={plan.id}
+                      draggable
+                      onDragStart={e => onDragStart(e, plan.id)}
+                      className={`px-3 py-2.5 text-kdc-body cursor-grab active:cursor-grabbing hover:bg-[#e8f0f8] select-none ${i > 0 ? 'border-t border-kdc-border' : ''}`}
+                      title="拖曳到左側 Vendor 的專屬方案欄"
+                    >
+                      {plan.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            {availablePlans.length === 0 ? (
-              <p className="px-3 py-6 text-center text-[13px] text-[#999]">
-                所有方案已在共用區
-              </p>
-            ) : (
-              <ul className="list-none m-0 p-2 flex flex-col gap-1.5">
-                {availablePlans.map(plan => (
-                  <li
-                    key={plan.id}
-                    draggable
-                    onDragStart={e => onDragStart(e, plan.id)}
-                    className="px-2.5 py-1.5 rounded-[5px] bg-white border border-kdc-border cursor-grab active:cursor-grabbing hover:bg-[#e8f0f8] select-none"
-                    title="拖曳到左側 Vendor 的專屬方案欄"
-                  >
-                    <div className="text-kdc-body font-medium">{plan.name}</div>
-                    <div className="text-[11px] text-[#999]">
-                      {profileName(plan.vlmProfileId)} · Daily Cap {plan.dailyCap === null ? "∞" : plan.dailyCap}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
           </aside>
         </div>
       </div>
