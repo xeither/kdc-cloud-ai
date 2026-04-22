@@ -24,7 +24,7 @@ Handoff bundle for the RD team. Produced via [Claude Design](https://claude.ai/d
 | 04 | Cloud AI 設定 — VLM Profiles | NEW |
 | 05 | Cloud AI 設定 — Prompts | NEW |
 | 06 | Cloud AI 設定 — AI Plans | NEW — **v1.5 重生成**：移除 UDID 欄、編輯 icon 改眼睛、刪除守衛改 Vendor-in-use、Prompts 為快照 |
-| 07 | Cloud AI 設定 — Vendor AI Settings | NEW |
+| 07 | Cloud AI 設定 — Vendor AI Settings | NEW — **v1.6 重生成**：Vendor 專屬區改 KDC 管理員風格（左側 vendor 表格+黑 chip，右側極簡專屬方案面板，drag-drop 新增） |
 | 08 | Design System | reference |
 
 All frames are **editable React components** (not image underlays). The shell (header / sidebar / footer) is a shared `<KdcShell>` component — edits propagate to every frame.
