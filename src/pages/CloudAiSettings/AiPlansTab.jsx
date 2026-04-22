@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCloudAi } from '../../context/CloudAiContext';
-import { IconPlus, IconEdit, IconTrash, IconArrowUp, IconArrowDown } from '../../icons';
+import { IconPlus, IconView, IconTrash, IconArrowUp, IconArrowDown, IconChevronDown, IconChevronRight } from '../../icons';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Pagination from '../../components/Pagination';
@@ -8,32 +8,31 @@ import Pagination from '../../components/Pagination';
 const EMPTY_FORM = { name: "", vlmProfileId: "", dailyCap: "", prompts: [], description: "" };
 
 export default function AiPlansTab() {
-  const { aiPlans, setAiPlans, vlmProfiles, prompts } = useCloudAi();
-  const [editing, setEditing] = useState(null);
+  const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, vendorSettings, vendors } = useCloudAi();
+  const [creating, setCreating] = useState(false);
+  const [viewing, setViewing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
+  const [blockedDelete, setBlockedDelete] = useState(null);
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
   }
 
-  function promptName(id) {
-    return prompts.find(p => p.id === id)?.name || id;
+  // 動態計算使用此 Plan 的 Vendor 數：在 globalPlans → 所有 vendors；否則數 specificPlans 命中
+  function usedByVendorCount(planId) {
+    if (globalPlans.includes(planId)) return vendors.length;
+    return vendors.filter(v => (vendorSettings[v.id]?.specificPlans || []).includes(planId)).length;
   }
 
   function openNew() {
     const defaultPrompt = prompts.find(p => p.name === "中文場景描述");
     setForm({ ...EMPTY_FORM, prompts: defaultPrompt ? [defaultPrompt.id] : [], vlmProfileId: vlmProfiles[0]?.id || "" });
-    setEditing("new");
+    setCreating(true);
   }
 
-  function openEdit(plan) {
-    setForm({ ...plan, prompts: [...plan.prompts], dailyCap: plan.dailyCap === null ? "" : plan.dailyCap });
-    setEditing(plan);
-  }
-
-  function closeModal() {
-    setEditing(null);
+  function closeCreate() {
+    setCreating(false);
     setForm(EMPTY_FORM);
   }
 
@@ -58,21 +57,32 @@ export default function AiPlansTab() {
     });
   }
 
+  // 儲存時深拷貝選到的 Prompt 當下內容，之後 Prompt 被編輯不影響此 Plan
   function save() {
     if (!form.name.trim() || (form.prompts || []).length === 0) return;
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
-    if (editing === "new") {
-      setAiPlans(prev => [...prev, {
-        ...form,
-        dailyCap,
-        id: "plan-" + Date.now(),
-        boundUdidCount: 0,
-        vendorCount: 0,
-      }]);
+    const now = new Date().toISOString().slice(0, 10);
+    const promptSnapshots = (form.prompts || []).map(pid => {
+      const p = prompts.find(x => x.id === pid);
+      return { id: p.id, name: p.name, promptBody: p.promptBody, snapshotAt: now };
+    });
+    setAiPlans(prev => [...prev, {
+      id: "plan-" + Date.now(),
+      name: form.name,
+      vlmProfileId: form.vlmProfileId,
+      dailyCap,
+      description: form.description,
+      prompts: promptSnapshots,
+    }]);
+    closeCreate();
+  }
+
+  function tryDelete(plan) {
+    if (usedByVendorCount(plan.id) > 0) {
+      setBlockedDelete(plan);
     } else {
-      setAiPlans(prev => prev.map(p => p.id === form.id ? { ...p, ...form, dailyCap } : p));
+      setDeleting(plan);
     }
-    closeModal();
   }
 
   const isFormValid = form.name.trim() && (form.prompts || []).length > 0;
@@ -98,7 +108,6 @@ export default function AiPlansTab() {
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-24">Daily Cap</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">Prompts</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">說明</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-16">UDID</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-16">Vendors</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-20">功能</th>
           </tr>
@@ -118,29 +127,28 @@ export default function AiPlansTab() {
               </td>
               <td className="px-3 py-2.5 border-b border-kdc-border">
                 <div className="flex flex-wrap">
-                  {(plan.prompts || []).map(pid => (
-                    <span key={pid} className="inline-flex items-center gap-1 bg-[#e8f0f8] text-kdc-primary px-2.5 py-0.5 rounded-xl text-[13px] mr-1 mb-0.5">
-                      {promptName(pid)}
+                  {(plan.prompts || []).map(snap => (
+                    <span key={snap.id} className="inline-flex items-center gap-1 bg-[#e8f0f8] text-kdc-primary px-2.5 py-0.5 rounded-xl text-[13px] mr-1 mb-0.5">
+                      {snap.name}
                     </span>
                   ))}
                 </div>
               </td>
               <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{plan.description}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border text-center">{plan.boundUdidCount}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border text-center">{plan.vendorCount}</td>
+              <td className="px-3 py-2.5 border-b border-kdc-border text-center">{usedByVendorCount(plan.id)}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border">
                 <div className="flex items-center gap-1">
                   <button
                     className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
-                    title="編輯"
-                    onClick={() => openEdit(plan)}
+                    title="檢視"
+                    onClick={() => setViewing(plan)}
                   >
-                    <IconEdit />
+                    <IconView />
                   </button>
                   <button
                     className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
                     title="刪除"
-                    onClick={() => setDeleting(plan)}
+                    onClick={() => tryDelete(plan)}
                   >
                     <IconTrash />
                   </button>
@@ -153,15 +161,15 @@ export default function AiPlansTab() {
 
       <Pagination total={aiPlans.length} />
 
-      {editing && (
+      {creating && (
         <Modal
-          title={editing === "new" ? "新增方案" : "編輯方案"}
-          onClose={closeModal}
+          title="新增方案"
+          onClose={closeCreate}
           footer={
             <>
               <button
                 className="px-3.5 py-1.5 text-sm rounded-btn border border-kdc-primary bg-white text-kdc-primary cursor-pointer hover:opacity-85"
-                onClick={closeModal}
+                onClick={closeCreate}
               >
                 取消
               </button>
@@ -213,7 +221,10 @@ export default function AiPlansTab() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">Prompts <span className="text-kdc-required">*</span></label>
+            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">
+              Prompts <span className="text-kdc-required">*</span>
+              <span className="text-[#999] text-xs font-normal ml-1">（儲存時會快照當下內容，之後 Prompt 編輯不影響此方案）</span>
+            </label>
             <div className="border border-kdc-border rounded-[5px] max-h-[200px] overflow-y-auto">
               {prompts.map(p => {
                 const checked = (form.prompts || []).includes(p.id);
@@ -267,6 +278,10 @@ export default function AiPlansTab() {
         </Modal>
       )}
 
+      {viewing && (
+        <PlanViewDialog plan={viewing} profileName={profileName} onClose={() => setViewing(null)} />
+      )}
+
       {deleting && (
         <ConfirmDialog
           message={`確定要刪除「${deleting.name}」嗎？此操作無法復原。`}
@@ -277,6 +292,96 @@ export default function AiPlansTab() {
           onCancel={() => setDeleting(null)}
         />
       )}
+
+      {blockedDelete && (
+        <ConfirmDialog
+          title="無法刪除"
+          message={`「${blockedDelete.name}」目前有 ${usedByVendorCount(blockedDelete.id)} 個 Vendor 使用中，請先到「Vendor AI 設定」將此方案移除後再刪除。`}
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setBlockedDelete(null)}
+          onCancel={() => setBlockedDelete(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function PlanViewDialog({ plan, profileName, onClose }) {
+  const [expanded, setExpanded] = useState({});
+
+  function toggle(id) {
+    setExpanded(e => ({ ...e, [id]: !e[id] }));
+  }
+
+  return (
+    <Modal
+      title="檢視方案"
+      onClose={onClose}
+      footer={
+        <button
+          className="px-3.5 py-1.5 text-sm rounded-btn border border-kdc-primary bg-white text-kdc-primary cursor-pointer hover:opacity-85"
+          onClick={onClose}
+        >
+          關閉
+        </button>
+      }
+    >
+      <div className="mb-3">
+        <div className="text-kdc-body font-medium text-[#999] mb-1">方案名稱</div>
+        <div className="text-kdc-table font-medium">{plan.name}</div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <div className="text-kdc-body font-medium text-[#999] mb-1">VLM Profile</div>
+          <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
+            {profileName(plan.vlmProfileId)}
+          </span>
+        </div>
+        <div>
+          <div className="text-kdc-body font-medium text-[#999] mb-1">Daily Cap</div>
+          <div className="text-kdc-table">{plan.dailyCap === null ? "∞" : plan.dailyCap}</div>
+        </div>
+      </div>
+      {plan.description && (
+        <div className="mb-4">
+          <div className="text-kdc-body font-medium text-[#999] mb-1">說明</div>
+          <div className="text-kdc-body">{plan.description}</div>
+        </div>
+      )}
+      <div>
+        <div className="text-kdc-body font-medium text-[#999] mb-2">
+          Prompts（快照，共 {(plan.prompts || []).length} 個）
+        </div>
+        <div className="border border-kdc-border rounded-[5px] overflow-hidden">
+          {(plan.prompts || []).map((snap, i) => {
+            const isOpen = !!expanded[snap.id];
+            return (
+              <div key={snap.id} className={i > 0 ? "border-t border-kdc-border" : ""}>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-2 bg-transparent border-none cursor-pointer hover:bg-[#f0f7ff] text-left"
+                  onClick={() => toggle(snap.id)}
+                >
+                  {isOpen ? <IconChevronDown /> : <IconChevronRight />}
+                  <span className="flex-1 text-kdc-body font-medium">{snap.name}</span>
+                  {snap.snapshotAt && (
+                    <span className="text-[11px] text-[#999]">快照於 {snap.snapshotAt}</span>
+                  )}
+                </button>
+                {isOpen && (
+                  <pre className="m-0 px-3 py-2 bg-[#f8f9fa] text-[12px] font-mono whitespace-pre-wrap border-t border-kdc-border">
+                    {snap.promptBody}
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+          {(plan.prompts || []).length === 0 && (
+            <div className="px-3 py-6 text-center text-[#999] text-kdc-body">無 Prompt</div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }
