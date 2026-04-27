@@ -15,6 +15,7 @@ export default function PromptsTab() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
   const [tagInput, setTagInput] = useState("");
+  const [dupName, setDupName] = useState(null);
 
   function openNew() {
     setForm({ ...EMPTY_FORM, tags: [] });
@@ -34,9 +35,25 @@ export default function PromptsTab() {
     setTagInput("");
   }
 
+  function uniqueCopyName(base) {
+    const existing = new Set(prompts.map(p => p.name));
+    let candidate = `${base} (副本)`;
+    let n = 2;
+    while (existing.has(candidate)) {
+      candidate = `${base} (副本 ${n})`;
+      n++;
+    }
+    return candidate;
+  }
+
   function doCopy(p) {
-    const copy = { ...p, id: "p-" + Date.now(), name: p.name + " (副本)", updatedAt: today, tags: [...p.tags] };
+    const copy = { ...p, id: "p-" + Date.now(), name: uniqueCopyName(p.name), updatedAt: today, tags: [...p.tags] };
     setPrompts(prev => [...prev, copy]);
+  }
+
+  function isDuplicateName(name) {
+    const trimmed = name.trim();
+    return prompts.some(p => p.name === trimmed && p.id !== form.id);
   }
 
   function addTag(e) {
@@ -55,11 +72,16 @@ export default function PromptsTab() {
   }
 
   function save() {
-    if (!form.name.trim()) return;
+    const trimmed = form.name.trim();
+    if (!trimmed) return;
+    if (isDuplicateName(trimmed)) {
+      setDupName(trimmed);
+      return;
+    }
     if (editing === "new") {
-      setPrompts(prev => [...prev, { ...form, id: "p-" + Date.now(), updatedAt: today }]);
+      setPrompts(prev => [...prev, { ...form, name: trimmed, id: "p-" + Date.now(), updatedAt: today }]);
     } else {
-      setPrompts(prev => prev.map(p => p.id === form.id ? { ...p, ...form, updatedAt: today } : p));
+      setPrompts(prev => prev.map(p => p.id === form.id ? { ...p, ...form, name: trimmed, updatedAt: today } : p));
     }
     closeModal();
   }
@@ -221,6 +243,18 @@ export default function PromptsTab() {
             setDeleting(null);
           }}
           onCancel={() => setDeleting(null)}
+        />
+      )}
+
+      {dupName && (
+        <ConfirmDialog
+          title="名稱重複"
+          message={`已存在名稱為「${dupName}」的 Prompt Template，請改用其他名稱。`}
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setDupName(null)}
+          onCancel={() => setDupName(null)}
         />
       )}
     </div>

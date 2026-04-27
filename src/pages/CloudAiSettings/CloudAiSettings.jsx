@@ -4,7 +4,7 @@ import PromptsTab from './PromptsTab';
 import AiPlansTab from './AiPlansTab';
 import VendorAiSettingsTab from './VendorAiSettingsTab';
 
-const tabs = ["VLM Profiles", "Prompts", "AI Plans", "Vendor AI Settings"];
+const tabs = ["VLM Profiles", "Prompt Templates", "AI Plans", "Vendor AI Settings"];
 
 export default function CloudAiSettings() {
   const [activeTab, setActiveTab] = useState(0);
