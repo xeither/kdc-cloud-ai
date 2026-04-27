@@ -22,7 +22,7 @@ Handoff bundle for the RD team. Produced via [Claude Design](https://claude.ai/d
 | 02 | 申請單管理 — 新增申請單 | EXISTING |
 | 03 | 申請單管理 — 新增 VSaaS 使用申請單 | EXISTING + NEW CLOUD AI ROW |
 | 04 | Cloud AI 設定 — VLM Profiles | NEW |
-| 05 | Cloud AI 設定 — Prompts | NEW |
+| 05 | Cloud AI 設定 — Prompt Templates | NEW — **v1.7 重生成**：tab 改名「Prompt Templates」+ 名稱重複警告 Modal |
 | 06 | Cloud AI 設定 — AI Plans | NEW — **v1.5 重生成**：移除 UDID 欄、編輯 icon 改眼睛、刪除守衛改 Vendor-in-use、Prompts 為快照 |
 | 07 | Cloud AI 設定 — Vendor AI Settings | NEW — **v1.6 重生成**：Vendor 專屬區改 KDC 管理員風格（左側 vendor 表格+黑 chip，右側極簡專屬方案面板，drag-drop 新增） |
 | 08 | Design System | reference |
