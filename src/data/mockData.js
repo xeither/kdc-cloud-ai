@@ -10,8 +10,18 @@ export const INITIAL_PROMPTS = [
   { id: "p-4", name: "熊偵測（日文）", description: "熊出沒專用偵測場景", tags: ["ja", "垂直應用"], promptBody: '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}', updatedAt: "2026-04-03" },
 ];
 
-// AI Plans 的 prompts 為快照（深拷貝當下 Prompt 內容），Plan 建立後即獨立，Prompt 後續編輯不影響此 Plan
-const snapshot = (id, name, promptBody, snapshotAt = "2026-04-10") => ({ id, name, promptBody, snapshotAt });
+// AI Plans 的 prompts 為「方案私有 PromptSnapshot」：建立當下從模板深拷貝 OR 由 PM 自建，
+// Plan 內可繼續編輯不影響其他方案；sourceTemplateId 為 null 代表「自建」。
+let __snapSeq = 0;
+const snapshot = (sourceTemplateId, name, promptBody, snapshotAt = "2026-04-10") => ({
+  id: `ps-${++__snapSeq}`,
+  sourceTemplateId,
+  sourceName: sourceTemplateId ? name : null,
+  name,
+  promptBody,
+  snapshotAt,
+  modified: false,
+});
 
 export const INITIAL_AI_PLANS = [
   {

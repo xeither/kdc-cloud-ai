@@ -1,11 +1,23 @@
 import { useState } from 'react';
 import { useCloudAi } from '../../context/CloudAiContext';
-import { IconPlus, IconView, IconTrash, IconArrowUp, IconArrowDown, IconChevronDown, IconChevronRight } from '../../icons';
+import { IconPlus, IconView, IconTrash, IconArrowUp, IconArrowDown, IconChevronDown, IconChevronRight, IconClose } from '../../icons';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Pagination from '../../components/Pagination';
 
 const EMPTY_FORM = { name: "", vlmProfileId: "", dailyCap: "", prompts: [], description: "" };
+
+let __snapSeq = Date.now();
+function newSnapshotId() {
+  return `ps-${++__snapSeq}`;
+}
+
+function uniqueName(base, takenSet) {
+  if (!takenSet.has(base)) return base;
+  let n = 2;
+  while (takenSet.has(`${base} (${n})`)) n++;
+  return `${base} (${n})`;
+}
 
 export default function AiPlansTab() {
   const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, vendorSettings, vendors } = useCloudAi();
@@ -14,40 +26,104 @@ export default function AiPlansTab() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
   const [blockedDelete, setBlockedDelete] = useState(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [expanded, setExpanded] = useState({});
+  const [dupName, setDupName] = useState(null);
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
   }
 
-  // 動態計算使用此 Plan 的 Vendor 數：在 globalPlans → 所有 vendors；否則數 specificPlans 命中
   function usedByVendorCount(planId) {
     if (globalPlans.includes(planId)) return vendors.length;
     return vendors.filter(v => (vendorSettings[v.id]?.specificPlans || []).includes(planId)).length;
   }
 
+  function snapshotFromTemplate(template, takenNames) {
+    const name = uniqueName(template.name, takenNames);
+    return {
+      id: newSnapshotId(),
+      sourceTemplateId: template.id,
+      sourceName: template.name,
+      name,
+      promptBody: template.promptBody,
+      modified: false,
+    };
+  }
+
+  function blankSnapshot(takenNames) {
+    const name = uniqueName("自建 Prompt", takenNames);
+    return {
+      id: newSnapshotId(),
+      sourceTemplateId: null,
+      sourceName: null,
+      name,
+      promptBody: '{\n  \n}',
+      modified: false,
+    };
+  }
+
   function openNew() {
     const defaultPrompt = prompts.find(p => p.name === "中文場景描述");
-    setForm({ ...EMPTY_FORM, prompts: defaultPrompt ? [defaultPrompt.id] : [], vlmProfileId: vlmProfiles[0]?.id || "" });
+    const initialPrompts = defaultPrompt ? [snapshotFromTemplate(defaultPrompt, new Set())] : [];
+    setForm({ ...EMPTY_FORM, prompts: initialPrompts, vlmProfileId: vlmProfiles[0]?.id || "" });
+    setExpanded({});
     setCreating(true);
   }
 
   function closeCreate() {
     setCreating(false);
     setForm(EMPTY_FORM);
+    setExpanded({});
   }
 
-  function togglePrompt(pid) {
+  function addFromTemplates(templateIds) {
     setForm(f => {
-      const arr = f.prompts || [];
-      if (arr.includes(pid)) {
-        return { ...f, prompts: arr.filter(id => id !== pid) };
-      } else {
-        return { ...f, prompts: [...arr, pid] };
+      const taken = new Set((f.prompts || []).map(p => p.name));
+      const newSnaps = [];
+      for (const tid of templateIds) {
+        const t = prompts.find(p => p.id === tid);
+        if (!t) continue;
+        const snap = snapshotFromTemplate(t, taken);
+        taken.add(snap.name);
+        newSnaps.push(snap);
       }
+      return { ...f, prompts: [...(f.prompts || []), ...newSnaps] };
+    });
+    setPickerOpen(false);
+  }
+
+  function addCustom() {
+    setForm(f => {
+      const taken = new Set((f.prompts || []).map(p => p.name));
+      const snap = blankSnapshot(taken);
+      // 自建卡片預設展開以便編輯
+      setExpanded(e => ({ ...e, [snap.id]: true }));
+      return { ...f, prompts: [...(f.prompts || []), snap] };
     });
   }
 
-  function movePrompt(idx, dir) {
+  function updateSnap(snapId, patch) {
+    setForm(f => ({
+      ...f,
+      prompts: (f.prompts || []).map(p => {
+        if (p.id !== snapId) return p;
+        const next = { ...p, ...patch };
+        // 來自模板且 name 或 body 被改 → 標記 modified
+        if (p.sourceTemplateId && (patch.name !== undefined || patch.promptBody !== undefined)) {
+          next.modified = true;
+        }
+        return next;
+      }),
+    }));
+  }
+
+  function removeSnap(snapId) {
+    setForm(f => ({ ...f, prompts: (f.prompts || []).filter(p => p.id !== snapId) }));
+    setExpanded(e => { const n = { ...e }; delete n[snapId]; return n; });
+  }
+
+  function moveSnap(idx, dir) {
     setForm(f => {
       const arr = [...(f.prompts || [])];
       const newIdx = idx + dir;
@@ -57,18 +133,34 @@ export default function AiPlansTab() {
     });
   }
 
-  // 儲存時深拷貝選到的 Prompt 當下內容，之後 Prompt 被編輯不影響此 Plan
+  function toggleExpand(snapId) {
+    setExpanded(e => ({ ...e, [snapId]: !e[snapId] }));
+  }
+
   function save() {
-    if (!form.name.trim() || (form.prompts || []).length === 0) return;
+    if (!form.name.trim()) return;
+    if ((form.prompts || []).length === 0) return;
+    // in-plan name 唯一性
+    const names = (form.prompts || []).map(p => p.name.trim());
+    const dup = names.find((n, i) => !n || names.indexOf(n) !== i);
+    if (dup !== undefined) {
+      setDupName(dup || "（空白）");
+      return;
+    }
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
     const now = new Date().toISOString().slice(0, 10);
-    const promptSnapshots = (form.prompts || []).map(pid => {
-      const p = prompts.find(x => x.id === pid);
-      return { id: p.id, name: p.name, promptBody: p.promptBody, snapshotAt: now };
-    });
+    const promptSnapshots = (form.prompts || []).map(s => ({
+      id: s.id,
+      sourceTemplateId: s.sourceTemplateId,
+      sourceName: s.sourceName,
+      name: s.name.trim(),
+      promptBody: s.promptBody,
+      snapshotAt: now,
+      modified: !!s.modified,
+    }));
     setAiPlans(prev => [...prev, {
       id: "plan-" + Date.now(),
-      name: form.name,
+      name: form.name.trim(),
       vlmProfileId: form.vlmProfileId,
       dailyCap,
       description: form.description,
@@ -85,7 +177,10 @@ export default function AiPlansTab() {
     }
   }
 
-  const isFormValid = form.name.trim() && (form.prompts || []).length > 0;
+  const isFormValid =
+    form.name.trim() &&
+    (form.prompts || []).length > 0 &&
+    (form.prompts || []).every(p => p.name.trim());
 
   return (
     <div>
@@ -220,51 +315,16 @@ export default function AiPlansTab() {
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">
-              Prompts <span className="text-kdc-required">*</span>
-              <span className="text-[#999] text-xs font-normal ml-1">（儲存時會快照當下內容，之後 Prompt 編輯不影響此方案）</span>
-            </label>
-            <div className="border border-kdc-border rounded-[5px] max-h-[200px] overflow-y-auto">
-              {prompts.map(p => {
-                const checked = (form.prompts || []).includes(p.id);
-                const idx = (form.prompts || []).indexOf(p.id);
-                return (
-                  <div key={p.id} className={`flex items-center px-3 py-1.5 border-b border-kdc-border ${checked ? 'bg-[#f0f7ff]' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => togglePrompt(p.id)}
-                      className="mr-2.5 w-[18px] h-[18px]"
-                    />
-                    <span className="flex-1 text-kdc-body">
-                      {p.name}{' '}
-                      <span className="text-[#999] text-xs">({(p.tags || []).join(", ")})</span>
-                    </span>
-                    {checked && (
-                      <span className="flex gap-1">
-                        <button
-                          className="bg-transparent border-none p-0.5 cursor-pointer disabled:opacity-30"
-                          onClick={() => movePrompt(idx, -1)}
-                          disabled={idx === 0}
-                        >
-                          <IconArrowUp />
-                        </button>
-                        <button
-                          className="bg-transparent border-none p-0.5 cursor-pointer disabled:opacity-30"
-                          onClick={() => movePrompt(idx, 1)}
-                          disabled={idx === (form.prompts || []).length - 1}
-                        >
-                          <IconArrowDown />
-                        </button>
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-xs text-[#999] mt-1">已選 {(form.prompts || []).length} 個 Prompt</p>
-          </div>
+          <PromptsBuilder
+            snaps={form.prompts || []}
+            expanded={expanded}
+            onToggleExpand={toggleExpand}
+            onUpdate={updateSnap}
+            onRemove={removeSnap}
+            onMove={moveSnap}
+            onOpenPicker={() => setPickerOpen(true)}
+            onAddCustom={addCustom}
+          />
 
           <div className="mb-4">
             <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">說明</label>
@@ -276,6 +336,14 @@ export default function AiPlansTab() {
             />
           </div>
         </Modal>
+      )}
+
+      {pickerOpen && (
+        <TemplatePickerDialog
+          templates={prompts}
+          onConfirm={addFromTemplates}
+          onClose={() => setPickerOpen(false)}
+        />
       )}
 
       {viewing && (
@@ -304,7 +372,191 @@ export default function AiPlansTab() {
           onCancel={() => setBlockedDelete(null)}
         />
       )}
+
+      {dupName !== null && (
+        <ConfirmDialog
+          title="Prompt 名稱重複"
+          message={`方案內已存在名稱為「${dupName}」的 Prompt，請改用其他名稱。`}
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setDupName(null)}
+          onCancel={() => setDupName(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function PromptsBuilder({ snaps, expanded, onToggleExpand, onUpdate, onRemove, onMove, onOpenPicker, onAddCustom }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-kdc-body font-medium text-kdc-text">
+          Prompts <span className="text-kdc-required">*</span>
+          <span className="text-[#999] text-xs font-normal ml-1">（從模板加入或自建，皆為此方案私有副本）</span>
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="bg-white text-kdc-primary border border-kdc-primary rounded-btn px-2.5 py-1 text-[12px] cursor-pointer inline-flex items-center gap-1 hover:bg-[#e8f0f8]"
+            onClick={onOpenPicker}
+          >
+            <IconPlus /> 從模板加入
+          </button>
+          <button
+            type="button"
+            className="bg-white text-kdc-primary border border-kdc-primary rounded-btn px-2.5 py-1 text-[12px] cursor-pointer inline-flex items-center gap-1 hover:bg-[#e8f0f8]"
+            onClick={onAddCustom}
+          >
+            <IconPlus /> 自建 Prompt
+          </button>
+        </div>
+      </div>
+
+      {snaps.length === 0 ? (
+        <div className="border border-dashed border-kdc-border rounded-[5px] px-3 py-6 text-center text-[#999] text-[13px]">
+          尚未加入 Prompt — 請從模板加入或自建
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {snaps.map((snap, idx) => {
+            const isOpen = !!expanded[snap.id];
+            const isCustom = !snap.sourceTemplateId;
+            return (
+              <div key={snap.id} className="border border-kdc-border rounded-[5px] bg-white">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-kdc-border bg-[#fafafa]">
+                  <button
+                    type="button"
+                    className="bg-transparent border-none p-0.5 cursor-pointer disabled:opacity-30"
+                    onClick={() => onMove(idx, -1)}
+                    disabled={idx === 0}
+                    title="上移"
+                  >
+                    <IconArrowUp />
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-transparent border-none p-0.5 cursor-pointer disabled:opacity-30"
+                    onClick={() => onMove(idx, 1)}
+                    disabled={idx === snaps.length - 1}
+                    title="下移"
+                  >
+                    <IconArrowDown />
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-transparent border-none p-0.5 cursor-pointer flex items-center"
+                    onClick={() => onToggleExpand(snap.id)}
+                    title={isOpen ? "收合" : "展開"}
+                  >
+                    {isOpen ? <IconChevronDown /> : <IconChevronRight />}
+                  </button>
+                  <input
+                    className="flex-1 h-7 border border-kdc-border rounded-[4px] px-2 text-kdc-body font-kdc outline-none focus:border-kdc-primary"
+                    value={snap.name}
+                    onChange={e => onUpdate(snap.id, { name: e.target.value })}
+                    placeholder="Prompt 名稱"
+                  />
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-medium whitespace-nowrap ${
+                      isCustom
+                        ? 'bg-[#fff3e0] text-[#e65100]'
+                        : 'bg-[#e8f0f8] text-kdc-primary'
+                    }`}
+                    title={isCustom ? "自建" : `源自模板：${snap.sourceName}`}
+                  >
+                    {isCustom ? "自建" : `源自：${snap.sourceName}`}
+                    {snap.modified && !isCustom && (
+                      <span className="ml-1 text-[#e65100]">・已修改</span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
+                    onClick={() => onRemove(snap.id)}
+                    title="移除"
+                  >
+                    <IconClose />
+                  </button>
+                </div>
+                {isOpen && (
+                  <div className="px-2.5 py-2">
+                    <label className="block text-[12px] text-[#999] mb-1">Prompt 內容（JSON）</label>
+                    <textarea
+                      className="border border-kdc-border rounded-[5px] px-2 py-1.5 font-mono text-[12px] outline-none w-full resize-y focus:border-kdc-primary"
+                      rows={6}
+                      value={snap.promptBody}
+                      onChange={e => onUpdate(snap.id, { promptBody: e.target.value })}
+                      placeholder={'{\n  \n}'}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="text-xs text-[#999] mt-1">已加入 {snaps.length} 個 Prompt</p>
+    </div>
+  );
+}
+
+function TemplatePickerDialog({ templates, onConfirm, onClose }) {
+  const [selected, setSelected] = useState([]);
+
+  function toggle(id) {
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
+
+  return (
+    <Modal
+      title="從模板加入 Prompt"
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            className="px-3.5 py-1.5 text-sm rounded-btn border border-kdc-primary bg-white text-kdc-primary cursor-pointer hover:opacity-85"
+            onClick={onClose}
+          >
+            取消
+          </button>
+          <button
+            className="px-3.5 py-1.5 text-sm rounded-btn border border-kdc-border bg-kdc-primary-alt text-white cursor-pointer hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => onConfirm(selected)}
+            disabled={selected.length === 0}
+          >
+            加入 {selected.length > 0 ? `(${selected.length})` : ''}
+          </button>
+        </>
+      }
+    >
+      <p className="text-[12px] text-[#999] mb-2">
+        模板內容會被深拷貝為此方案的私有副本，加入後仍可編輯，且不會回寫模板。
+      </p>
+      <div className="border border-kdc-border rounded-[5px] max-h-[300px] overflow-y-auto">
+        {templates.map(p => {
+          const checked = selected.includes(p.id);
+          return (
+            <label
+              key={p.id}
+              className={`flex items-center px-3 py-2 border-b border-kdc-border cursor-pointer hover:bg-[#f0f7ff] ${checked ? 'bg-[#f0f7ff]' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggle(p.id)}
+                className="mr-2.5 w-[18px] h-[18px]"
+              />
+              <span className="flex-1">
+                <span className="text-kdc-body font-medium">{p.name}</span>
+                <span className="text-[#999] text-xs ml-2">({(p.tags || []).join(", ")})</span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </Modal>
   );
 }
 
@@ -357,6 +609,7 @@ function PlanViewDialog({ plan, profileName, onClose }) {
         <div className="border border-kdc-border rounded-[5px] overflow-hidden">
           {(plan.prompts || []).map((snap, i) => {
             const isOpen = !!expanded[snap.id];
+            const isCustom = !snap.sourceTemplateId;
             return (
               <div key={snap.id} className={i > 0 ? "border-t border-kdc-border" : ""}>
                 <button
@@ -365,8 +618,18 @@ function PlanViewDialog({ plan, profileName, onClose }) {
                 >
                   {isOpen ? <IconChevronDown /> : <IconChevronRight />}
                   <span className="flex-1 text-kdc-body font-medium">{snap.name}</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-medium whitespace-nowrap ${
+                      isCustom ? 'bg-[#fff3e0] text-[#e65100]' : 'bg-[#e8f0f8] text-kdc-primary'
+                    }`}
+                  >
+                    {isCustom ? "自建" : `源自：${snap.sourceName}`}
+                    {snap.modified && !isCustom && (
+                      <span className="ml-1 text-[#e65100]">・已修改</span>
+                    )}
+                  </span>
                   {snap.snapshotAt && (
-                    <span className="text-[11px] text-[#999]">快照於 {snap.snapshotAt}</span>
+                    <span className="text-[11px] text-[#999]">{snap.snapshotAt}</span>
                   )}
                 </button>
                 {isOpen && (
