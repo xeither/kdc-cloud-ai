@@ -23,6 +23,19 @@ const snapshot = (sourceTemplateId, name, promptBody, snapshotAt = "2026-04-10")
   modified: false,
 });
 
+// AI Plan 的 prompts 為一組可在前端被使用者切換的選項，其中一個為「預設」（defaultPromptId）
+const plan1Prompts = [
+  snapshot("p-1", "中文場景描述", '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}'),
+  snapshot("p-2", "English Scene", '{\n  "language": "en",\n  "instruction": "Describe the scene...",\n  "output_format": "structured"\n}'),
+  snapshot("p-3", "日本語シーン", '{\n  "language": "ja",\n  "instruction": "シーンを説明してください...",\n  "output_format": "structured"\n}'),
+];
+const plan2Prompts = [
+  snapshot("p-4", "熊偵測（日文）", '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}'),
+];
+const plan3Prompts = [
+  snapshot("p-1", "中文場景描述", '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}'),
+];
+
 export const INITIAL_AI_PLANS = [
   {
     id: "plan-1",
@@ -30,11 +43,8 @@ export const INITIAL_AI_PLANS = [
     vlmProfileId: "vlm-1",
     dailyCap: 100,
     description: "標準版，語系切換免費",
-    prompts: [
-      snapshot("p-1", "中文場景描述", '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}'),
-      snapshot("p-2", "English Scene", '{\n  "language": "en",\n  "instruction": "Describe the scene...",\n  "output_format": "structured"\n}'),
-      snapshot("p-3", "日本語シーン", '{\n  "language": "ja",\n  "instruction": "シーンを説明してください...",\n  "output_format": "structured"\n}'),
-    ],
+    prompts: plan1Prompts,
+    defaultPromptId: plan1Prompts[0].id,
   },
   {
     id: "plan-2",
@@ -42,9 +52,8 @@ export const INITIAL_AI_PLANS = [
     vlmProfileId: "vlm-1",
     dailyCap: null,
     description: "專用場景",
-    prompts: [
-      snapshot("p-4", "熊偵測（日文）", '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}'),
-    ],
+    prompts: plan2Prompts,
+    defaultPromptId: plan2Prompts[0].id,
   },
   {
     id: "plan-3",
@@ -52,9 +61,8 @@ export const INITIAL_AI_PLANS = [
     vlmProfileId: "vlm-2",
     dailyCap: 100,
     description: "中國區合規 VLM",
-    prompts: [
-      snapshot("p-1", "中文場景描述", '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}'),
-    ],
+    prompts: plan3Prompts,
+    defaultPromptId: plan3Prompts[0].id,
   },
 ];
 
