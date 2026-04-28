@@ -29,6 +29,7 @@ export default function AiPlansTab() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [expanded, setExpanded] = useState({});
   const [dupName, setDupName] = useState(null);
+  const [blockedRemoveDefault, setBlockedRemoveDefault] = useState(false);
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
@@ -132,14 +133,12 @@ export default function AiPlansTab() {
   }
 
   function removeSnap(snapId) {
-    setForm(f => {
-      const remaining = (f.prompts || []).filter(p => p.id !== snapId);
-      // 若刪除的是預設，從剩下的第一個接手；無剩下則為 null
-      const defaultId = f.defaultPromptId === snapId
-        ? (remaining[0]?.id || null)
-        : f.defaultPromptId;
-      return { ...f, prompts: remaining, defaultPromptId: defaultId };
-    });
+    // 預設 prompt 不可直接刪除，強迫 PM 先把預設換到其他卡片
+    if (snapId === form.defaultPromptId) {
+      setBlockedRemoveDefault(true);
+      return;
+    }
+    setForm(f => ({ ...f, prompts: (f.prompts || []).filter(p => p.id !== snapId) }));
     setExpanded(e => { const n = { ...e }; delete n[snapId]; return n; });
   }
 
@@ -395,6 +394,18 @@ export default function AiPlansTab() {
           singleButton
           onConfirm={() => setDupName(null)}
           onCancel={() => setDupName(null)}
+        />
+      )}
+
+      {blockedRemoveDefault && (
+        <ConfirmDialog
+          title="無法刪除預設 Prompt"
+          message="預設 Prompt 不可直接刪除，請先將其他 Prompt 設為預設後再刪除。"
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setBlockedRemoveDefault(false)}
+          onCancel={() => setBlockedRemoveDefault(false)}
         />
       )}
     </div>
