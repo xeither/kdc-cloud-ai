@@ -22,9 +22,9 @@ Handoff bundle for the RD team. Produced via [Claude Design](https://claude.ai/d
 | 02 | 申請單管理 — 新增申請單 | EXISTING |
 | 03 | 申請單管理 — 新增 VSaaS 使用申請單 | EXISTING + NEW CLOUD AI ROW |
 | 04 | Cloud AI 設定 — VLM Profiles | NEW |
-| 05 | Cloud AI 設定 — Prompt Templates | NEW — **v1.7 重生成**：tab 改名「Prompt Templates」+ 名稱重複警告 Modal |
-| 06 | Cloud AI 設定 — AI Plans | NEW — **v1.5 重生成**：移除 UDID 欄、編輯 icon 改眼睛、刪除守衛改 Vendor-in-use、Prompts 為快照 |
-| 07 | Cloud AI 設定 — Vendor AI Settings | NEW — **v1.6 重生成**：Vendor 專屬區改 KDC 管理員風格（左側 vendor 表格+黑 chip，右側極簡專屬方案面板，drag-drop 新增） |
+| 05 | Cloud AI 設定 — Prompt Templates | NEW — **批次更新 2026-04-28**：tab 改名 Prompt Templates、名稱重複警告、JSON 格式錯誤態 |
+| 06 | Cloud AI 設定 — AI Plans | NEW — **批次更新 2026-04-28**：移除 UDID、view-only 檢視 Modal（含預設 chip + 來源 chip + JSON 展開）、Prompts Builder（從模板/自建、name 唯一、預設 radio + 不可刪除、JSON 驗證） |
+| 07 | Cloud AI 設定 — Vendor AI Settings | NEW — **批次更新 2026-04-28**：Vendor 專屬區改 KDC 管理員風格（黑 chip table + 極簡側欄 + drag-drop） |
 | 08 | Design System | reference |
 
 All frames are **editable React components** (not image underlays). The shell (header / sidebar / footer) is a shared `<KdcShell>` component — edits propagate to every frame.
@@ -41,15 +41,21 @@ All frames are **editable React components** (not image underlays). The shell (h
 >
 > Cloud AI 相關的新功能在橘色 **NEW** chip 標示處；既有 KDC shell 在藍色 **EXISTING** chip 標示處。VSaaS 使用申請單頁面的 "Cloud AI 加值服務" 那一列是唯一既有頁面裡新增的東西。
 
-## Regenerating the deliverable
+## Regenerating the deliverable (batched mode)
 
-If code/tokens change and we need to regenerate:
+Per Ronald's preference, design assets are refreshed in batches — accumulate prototype changes + SPEC bumps, then run one consolidated update when explicitly requested.
 
+**Latest batch**: [`design/ITERATION-batch-2026-04-28.md`](./ITERATION-batch-2026-04-28.md) — covers D-022 ~ D-030 (SPEC v1.5 ~ v1.11). Open it for the one-shot Claude Design prompt + which PNGs to attach.
+
+Mechanics:
 ```bash
 npm run figma:frames                                # refresh 16 PNG screenshots at 1440×900 and 1920×1080
+# Sync the modified frames into design/attachments/
 # then open https://claude.ai/design/p/843d5a59-6270-4a78-988c-2174e26d9a54
-# and send: "src/ 和 design/attachments/ 更新了，請重新生成全部 10 個 artboards"
+# attach the changed PNGs and paste the prompt from the latest ITERATION-batch-*.md
 ```
+
+Older per-version files (`ITERATION-V1.5-AI-PLANS.md`, `ITERATION-V1.6-VENDOR-ZONE.md`, `ITERATION-V1.7-PROMPT-TEMPLATES.md`) are kept as historical record but **superseded** by the current batch file.
 
 ## Lessons (fed back into `replicate-website-visual` skill)
 
