@@ -9,6 +9,17 @@ const today = new Date().toISOString().slice(0, 10);
 
 const EMPTY_FORM = { name: "", description: "", tags: [], promptBody: '{\n  \n}' };
 
+// 回傳 null 代表 OK，否則回傳錯誤訊息
+function validateJson(text) {
+  if (!text || !text.trim()) return "Prompt 內容不可為空";
+  try {
+    JSON.parse(text);
+    return null;
+  } catch (e) {
+    return `JSON 格式錯誤：${e.message}`;
+  }
+}
+
 export default function PromptsTab() {
   const { prompts, setPrompts } = useCloudAi();
   const [editing, setEditing] = useState(null);
@@ -16,16 +27,20 @@ export default function PromptsTab() {
   const [deleting, setDeleting] = useState(null);
   const [tagInput, setTagInput] = useState("");
   const [dupName, setDupName] = useState(null);
+  const [bodyError, setBodyError] = useState(null);
+  const [invalidBodyAlert, setInvalidBodyAlert] = useState(false);
 
   function openNew() {
     setForm({ ...EMPTY_FORM, tags: [] });
     setTagInput("");
+    setBodyError(null);
     setEditing("new");
   }
 
   function openEdit(p) {
     setForm({ ...p, tags: [...p.tags] });
     setTagInput("");
+    setBodyError(null);
     setEditing(p);
   }
 
@@ -33,6 +48,7 @@ export default function PromptsTab() {
     setEditing(null);
     setForm(EMPTY_FORM);
     setTagInput("");
+    setBodyError(null);
   }
 
   function uniqueCopyName(base) {
@@ -74,6 +90,12 @@ export default function PromptsTab() {
   function save() {
     const trimmed = form.name.trim();
     if (!trimmed) return;
+    const jsonErr = validateJson(form.promptBody);
+    if (jsonErr) {
+      setBodyError(jsonErr);
+      setInvalidBodyAlert(true);
+      return;
+    }
     if (isDuplicateName(trimmed)) {
       setDupName(trimmed);
       return;
@@ -223,14 +245,26 @@ export default function PromptsTab() {
           <div className="mb-4">
             <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">
               Prompt 內容 <span className="text-kdc-required">*</span>
+              <span className="text-[#999] text-xs font-normal ml-1">（JSON 格式）</span>
             </label>
             <textarea
-              className="border border-kdc-border rounded-[5px] px-2.5 py-2 font-mono text-[13px] outline-none w-full resize-y focus:border-kdc-primary focus:shadow-[0_0_0_2px_rgba(0,68,128,0.1)]"
+              className={`border rounded-[5px] px-2.5 py-2 font-mono text-[13px] outline-none w-full resize-y focus:shadow-[0_0_0_2px_rgba(0,68,128,0.1)] ${
+                bodyError
+                  ? 'border-[#d32f2f] focus:border-[#d32f2f]'
+                  : 'border-kdc-border focus:border-kdc-primary'
+              }`}
               rows={8}
               value={form.promptBody}
-              onChange={e => setForm(f => ({ ...f, promptBody: e.target.value }))}
+              onChange={e => {
+                setForm(f => ({ ...f, promptBody: e.target.value }));
+                if (bodyError) setBodyError(null);
+              }}
+              onBlur={() => setBodyError(validateJson(form.promptBody))}
               placeholder={'{\n  \n}'}
             />
+            {bodyError && (
+              <p className="text-[12px] text-[#d32f2f] mt-1">{bodyError}</p>
+            )}
           </div>
         </Modal>
       )}
@@ -255,6 +289,18 @@ export default function PromptsTab() {
           singleButton
           onConfirm={() => setDupName(null)}
           onCancel={() => setDupName(null)}
+        />
+      )}
+
+      {invalidBodyAlert && (
+        <ConfirmDialog
+          title="JSON 格式錯誤"
+          message="Prompt 內容必須是合法的 JSON。請依下方紅字提示修正後再儲存。"
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setInvalidBodyAlert(false)}
+          onCancel={() => setInvalidBodyAlert(false)}
         />
       )}
     </div>

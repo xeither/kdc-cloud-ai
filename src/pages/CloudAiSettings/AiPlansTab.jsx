@@ -19,6 +19,17 @@ function uniqueName(base, takenSet) {
   return `${base} (${n})`;
 }
 
+// 回傳 null 代表 OK，否則回傳錯誤訊息
+function validateJson(text) {
+  if (!text || !text.trim()) return "Prompt 內容不可為空";
+  try {
+    JSON.parse(text);
+    return null;
+  } catch (e) {
+    return `JSON 格式錯誤：${e.message}`;
+  }
+}
+
 export default function AiPlansTab() {
   const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, vendorSettings, vendors } = useCloudAi();
   const [creating, setCreating] = useState(false);
@@ -30,6 +41,8 @@ export default function AiPlansTab() {
   const [expanded, setExpanded] = useState({});
   const [dupName, setDupName] = useState(null);
   const [blockedRemoveDefault, setBlockedRemoveDefault] = useState(false);
+  const [bodyErrors, setBodyErrors] = useState({}); // { [snapId]: errorMsg }
+  const [invalidBodySnaps, setInvalidBodySnaps] = useState(null); // string[] | null
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
@@ -74,6 +87,7 @@ export default function AiPlansTab() {
       vlmProfileId: vlmProfiles[0]?.id || "",
     });
     setExpanded({});
+    setBodyErrors({});
     setCreating(true);
   }
 
@@ -81,6 +95,15 @@ export default function AiPlansTab() {
     setCreating(false);
     setForm(EMPTY_FORM);
     setExpanded({});
+    setBodyErrors({});
+  }
+
+  function checkBody(snapId, body) {
+    setBodyErrors(prev => ({ ...prev, [snapId]: validateJson(body) }));
+  }
+
+  function clearBodyError(snapId) {
+    setBodyErrors(prev => prev[snapId] ? { ...prev, [snapId]: null } : prev);
   }
 
   function addFromTemplates(templateIds) {
@@ -154,6 +177,27 @@ export default function AiPlansTab() {
     const dup = names.find((n, i) => !n || names.indexOf(n) !== i);
     if (dup !== undefined) {
       setDupName(dup || "（空白）");
+      return;
+    }
+    // JSON 格式檢查（彙整所有無效卡片）
+    const newErrors = {};
+    const invalidNames = [];
+    for (const snap of (form.prompts || [])) {
+      const err = validateJson(snap.promptBody);
+      newErrors[snap.id] = err;
+      if (err) invalidNames.push(snap.name.trim() || "（未命名）");
+    }
+    if (invalidNames.length > 0) {
+      setBodyErrors(newErrors);
+      setInvalidBodySnaps(invalidNames);
+      // 自動展開無效卡片，方便 PM 直接看到紅框
+      setExpanded(e => {
+        const next = { ...e };
+        for (const snap of (form.prompts || [])) {
+          if (newErrors[snap.id]) next[snap.id] = true;
+        }
+        return next;
+      });
       return;
     }
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
@@ -330,12 +374,15 @@ export default function AiPlansTab() {
             snaps={form.prompts || []}
             defaultPromptId={form.defaultPromptId}
             expanded={expanded}
+            bodyErrors={bodyErrors}
             onToggleExpand={toggleExpand}
             onUpdate={updateSnap}
             onRemove={removeSnap}
             onSetDefault={setDefaultPrompt}
             onOpenPicker={() => setPickerOpen(true)}
             onAddCustom={addCustom}
+            onBodyBlur={checkBody}
+            onBodyChange={clearBodyError}
           />
 
           <div className="mb-4">
@@ -408,11 +455,23 @@ export default function AiPlansTab() {
           onCancel={() => setBlockedRemoveDefault(false)}
         />
       )}
+
+      {invalidBodySnaps && (
+        <ConfirmDialog
+          title="JSON 格式錯誤"
+          message={`以下 Prompt 的 JSON 格式無效，請修正後再儲存：${invalidBodySnaps.join("、")}`}
+          confirmText="我知道了"
+          variant="warning"
+          singleButton
+          onConfirm={() => setInvalidBodySnaps(null)}
+          onCancel={() => setInvalidBodySnaps(null)}
+        />
+      )}
     </div>
   );
 }
 
-function PromptsBuilder({ snaps, defaultPromptId, expanded, onToggleExpand, onUpdate, onRemove, onSetDefault, onOpenPicker, onAddCustom }) {
+function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggleExpand, onUpdate, onRemove, onSetDefault, onOpenPicker, onAddCustom, onBodyBlur, onBodyChange }) {
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-1.5">
@@ -514,12 +573,23 @@ function PromptsBuilder({ snaps, defaultPromptId, expanded, onToggleExpand, onUp
                   <div className="px-2.5 py-2">
                     <label className="block text-[12px] text-[#999] mb-1">Prompt 內容（JSON）</label>
                     <textarea
-                      className="border border-kdc-border rounded-[5px] px-2 py-1.5 font-mono text-[12px] outline-none w-full resize-y focus:border-kdc-primary"
+                      className={`border rounded-[5px] px-2 py-1.5 font-mono text-[12px] outline-none w-full resize-y ${
+                        bodyErrors?.[snap.id]
+                          ? 'border-[#d32f2f] focus:border-[#d32f2f]'
+                          : 'border-kdc-border focus:border-kdc-primary'
+                      }`}
                       rows={6}
                       value={snap.promptBody}
-                      onChange={e => onUpdate(snap.id, { promptBody: e.target.value })}
+                      onChange={e => {
+                        onUpdate(snap.id, { promptBody: e.target.value });
+                        onBodyChange?.(snap.id);
+                      }}
+                      onBlur={() => onBodyBlur?.(snap.id, snap.promptBody)}
                       placeholder={'{\n  \n}'}
                     />
+                    {bodyErrors?.[snap.id] && (
+                      <p className="text-[12px] text-[#d32f2f] mt-1">{bodyErrors[snap.id]}</p>
+                    )}
                   </div>
                 )}
               </div>
