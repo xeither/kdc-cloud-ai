@@ -28,19 +28,18 @@ export default function PromptsTab() {
   const [tagInput, setTagInput] = useState("");
   const [dupName, setDupName] = useState(null);
   const [bodyError, setBodyError] = useState(null);
-  const [invalidBodyAlert, setInvalidBodyAlert] = useState(false);
 
   function openNew() {
     setForm({ ...EMPTY_FORM, tags: [] });
     setTagInput("");
-    setBodyError(null);
+    setBodyError(validateJson(EMPTY_FORM.promptBody));
     setEditing("new");
   }
 
   function openEdit(p) {
     setForm({ ...p, tags: [...p.tags] });
     setTagInput("");
-    setBodyError(null);
+    setBodyError(validateJson(p.promptBody));
     setEditing(p);
   }
 
@@ -90,12 +89,6 @@ export default function PromptsTab() {
   function save() {
     const trimmed = form.name.trim();
     if (!trimmed) return;
-    const jsonErr = validateJson(form.promptBody);
-    if (jsonErr) {
-      setBodyError(jsonErr);
-      setInvalidBodyAlert(true);
-      return;
-    }
     if (isDuplicateName(trimmed)) {
       setDupName(trimmed);
       return;
@@ -108,7 +101,7 @@ export default function PromptsTab() {
     closeModal();
   }
 
-  const isFormValid = form.name.trim();
+  const isFormValid = form.name.trim() && !validateJson(form.promptBody);
 
   return (
     <div>
@@ -256,10 +249,10 @@ export default function PromptsTab() {
               rows={8}
               value={form.promptBody}
               onChange={e => {
-                setForm(f => ({ ...f, promptBody: e.target.value }));
-                if (bodyError) setBodyError(null);
+                const v = e.target.value;
+                setForm(f => ({ ...f, promptBody: v }));
+                setBodyError(validateJson(v));
               }}
-              onBlur={() => setBodyError(validateJson(form.promptBody))}
               placeholder={'{\n  \n}'}
             />
             {bodyError && (
@@ -292,17 +285,6 @@ export default function PromptsTab() {
         />
       )}
 
-      {invalidBodyAlert && (
-        <ConfirmDialog
-          title="JSON 格式錯誤"
-          message="Prompt 內容必須是合法的 JSON。請依下方紅字提示修正後再儲存。"
-          confirmText="我知道了"
-          variant="warning"
-          singleButton
-          onConfirm={() => setInvalidBodyAlert(false)}
-          onCancel={() => setInvalidBodyAlert(false)}
-        />
-      )}
     </div>
   );
 }

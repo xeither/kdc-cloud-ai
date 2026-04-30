@@ -42,7 +42,6 @@ export default function AiPlansTab() {
   const [dupName, setDupName] = useState(null);
   const [blockedRemoveDefault, setBlockedRemoveDefault] = useState(false);
   const [bodyErrors, setBodyErrors] = useState({}); // { [snapId]: errorMsg }
-  const [invalidBodySnaps, setInvalidBodySnaps] = useState(null); // string[] | null
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
@@ -80,6 +79,8 @@ export default function AiPlansTab() {
   function openNew() {
     const defaultPrompt = prompts.find(p => p.name === "中文場景描述");
     const initialPrompts = defaultPrompt ? [snapshotFromTemplate(defaultPrompt, new Set())] : [];
+    const initialErrors = {};
+    for (const s of initialPrompts) initialErrors[s.id] = validateJson(s.promptBody);
     setForm({
       ...EMPTY_FORM,
       prompts: initialPrompts,
@@ -87,7 +88,7 @@ export default function AiPlansTab() {
       vlmProfileId: vlmProfiles[0]?.id || "",
     });
     setExpanded({});
-    setBodyErrors({});
+    setBodyErrors(initialErrors);
     setCreating(true);
   }
 
@@ -98,12 +99,8 @@ export default function AiPlansTab() {
     setBodyErrors({});
   }
 
-  function checkBody(snapId, body) {
+  function validateBody(snapId, body) {
     setBodyErrors(prev => ({ ...prev, [snapId]: validateJson(body) }));
-  }
-
-  function clearBodyError(snapId) {
-    setBodyErrors(prev => prev[snapId] ? { ...prev, [snapId]: null } : prev);
   }
 
   function addFromTemplates(templateIds) {
@@ -120,6 +117,11 @@ export default function AiPlansTab() {
       const merged = [...(f.prompts || []), ...newSnaps];
       // 若原本沒有預設（清單為空才會發生），把第一個新加的設為預設
       const defaultId = f.defaultPromptId || newSnaps[0]?.id || null;
+      setBodyErrors(prev => {
+        const next = { ...prev };
+        for (const s of newSnaps) next[s.id] = validateJson(s.promptBody);
+        return next;
+      });
       return { ...f, prompts: merged, defaultPromptId: defaultId };
     });
     setPickerOpen(false);
@@ -131,6 +133,7 @@ export default function AiPlansTab() {
       const snap = blankSnapshot(taken);
       // 自建卡片預設展開以便編輯
       setExpanded(e => ({ ...e, [snap.id]: true }));
+      setBodyErrors(prev => ({ ...prev, [snap.id]: validateJson(snap.promptBody) }));
       const defaultId = f.defaultPromptId || snap.id;
       return { ...f, prompts: [...(f.prompts || []), snap], defaultPromptId: defaultId };
     });
@@ -163,6 +166,7 @@ export default function AiPlansTab() {
     }
     setForm(f => ({ ...f, prompts: (f.prompts || []).filter(p => p.id !== snapId) }));
     setExpanded(e => { const n = { ...e }; delete n[snapId]; return n; });
+    setBodyErrors(e => { const n = { ...e }; delete n[snapId]; return n; });
   }
 
   function toggleExpand(snapId) {
@@ -177,27 +181,6 @@ export default function AiPlansTab() {
     const dup = names.find((n, i) => !n || names.indexOf(n) !== i);
     if (dup !== undefined) {
       setDupName(dup || "（空白）");
-      return;
-    }
-    // JSON 格式檢查（彙整所有無效卡片）
-    const newErrors = {};
-    const invalidNames = [];
-    for (const snap of (form.prompts || [])) {
-      const err = validateJson(snap.promptBody);
-      newErrors[snap.id] = err;
-      if (err) invalidNames.push(snap.name.trim() || "（未命名）");
-    }
-    if (invalidNames.length > 0) {
-      setBodyErrors(newErrors);
-      setInvalidBodySnaps(invalidNames);
-      // 自動展開無效卡片，方便 PM 直接看到紅框
-      setExpanded(e => {
-        const next = { ...e };
-        for (const snap of (form.prompts || [])) {
-          if (newErrors[snap.id]) next[snap.id] = true;
-        }
-        return next;
-      });
       return;
     }
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
@@ -235,7 +218,8 @@ export default function AiPlansTab() {
     form.name.trim() &&
     (form.prompts || []).length > 0 &&
     (form.prompts || []).every(p => p.name.trim()) &&
-    !!form.defaultPromptId;
+    !!form.defaultPromptId &&
+    (form.prompts || []).every(p => !validateJson(p.promptBody));
 
   return (
     <div>
@@ -381,8 +365,7 @@ export default function AiPlansTab() {
             onSetDefault={setDefaultPrompt}
             onOpenPicker={() => setPickerOpen(true)}
             onAddCustom={addCustom}
-            onBodyBlur={checkBody}
-            onBodyChange={clearBodyError}
+            onBodyChange={validateBody}
           />
 
           <div className="mb-4">
@@ -456,22 +439,11 @@ export default function AiPlansTab() {
         />
       )}
 
-      {invalidBodySnaps && (
-        <ConfirmDialog
-          title="JSON 格式錯誤"
-          message={`以下 Prompt 的 JSON 格式無效，請修正後再儲存：${invalidBodySnaps.join("、")}`}
-          confirmText="我知道了"
-          variant="warning"
-          singleButton
-          onConfirm={() => setInvalidBodySnaps(null)}
-          onCancel={() => setInvalidBodySnaps(null)}
-        />
-      )}
     </div>
   );
 }
 
-function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggleExpand, onUpdate, onRemove, onSetDefault, onOpenPicker, onAddCustom, onBodyBlur, onBodyChange }) {
+function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggleExpand, onUpdate, onRemove, onSetDefault, onOpenPicker, onAddCustom, onBodyChange }) {
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-1.5">
@@ -507,14 +479,19 @@ function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggle
             const isOpen = !!expanded[snap.id];
             const isCustom = !snap.sourceTemplateId;
             const isDefault = snap.id === defaultPromptId;
+            const hasError = !!bodyErrors?.[snap.id];
             return (
               <div
                 key={snap.id}
                 className={`border rounded-[5px] bg-white border-l-[4px] ${
-                  isDefault ? 'border-kdc-border border-l-[#2e7d32]' : 'border-kdc-border border-l-transparent'
+                  hasError
+                    ? 'border-[#d32f2f] border-l-[#d32f2f]'
+                    : isDefault
+                      ? 'border-kdc-border border-l-[#2e7d32]'
+                      : 'border-kdc-border border-l-transparent'
                 }`}
               >
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-kdc-border bg-[#fafafa]">
+                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 ${isOpen ? 'border-b border-kdc-border' : ''} bg-[#fafafa]`}>
                   <label
                     className="inline-flex items-center gap-1 cursor-pointer text-[12px] text-kdc-text px-1.5 py-0.5 rounded hover:bg-[#e0e7ee]"
                     title="設為預設"
@@ -560,6 +537,14 @@ function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggle
                       <span className="ml-1 text-[#e65100]">・已修改</span>
                     )}
                   </span>
+                  {hasError && (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-medium whitespace-nowrap bg-[#ffebee] text-[#d32f2f]"
+                      title={bodyErrors[snap.id]}
+                    >
+                      JSON 錯誤
+                    </span>
+                  )}
                   <button
                     type="button"
                     className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
@@ -574,7 +559,7 @@ function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggle
                     <label className="block text-[12px] text-[#999] mb-1">Prompt 內容（JSON）</label>
                     <textarea
                       className={`border rounded-[5px] px-2 py-1.5 font-mono text-[12px] outline-none w-full resize-y ${
-                        bodyErrors?.[snap.id]
+                        hasError
                           ? 'border-[#d32f2f] focus:border-[#d32f2f]'
                           : 'border-kdc-border focus:border-kdc-primary'
                       }`}
@@ -582,12 +567,11 @@ function PromptsBuilder({ snaps, defaultPromptId, expanded, bodyErrors, onToggle
                       value={snap.promptBody}
                       onChange={e => {
                         onUpdate(snap.id, { promptBody: e.target.value });
-                        onBodyChange?.(snap.id);
+                        onBodyChange?.(snap.id, e.target.value);
                       }}
-                      onBlur={() => onBodyBlur?.(snap.id, snap.promptBody)}
                       placeholder={'{\n  \n}'}
                     />
-                    {bodyErrors?.[snap.id] && (
+                    {hasError && (
                       <p className="text-[12px] text-[#d32f2f] mt-1">{bodyErrors[snap.id]}</p>
                     )}
                   </div>
