@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCloudAi } from '../../context/CloudAiContext';
-import { IconPlus, IconEdit, IconTrash } from '../../icons';
+import { IconPlus, IconEdit, IconTrash, IconArrowUp, IconArrowDown } from '../../icons';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Pagination from '../../components/Pagination';
@@ -11,24 +11,29 @@ const EMPTY_FORM = {
   vlmProfileId: "",
   dailyCap: "",
   description: "",
-  prompts: [],          // Prompt IDs (references — Prompt 編輯會即時反映到所有引用的 AI Plan)
-  defaultPromptId: null,
+  prompts: [],          // Prompt IDs (ordered; prompts[0] 即為預設)
 };
 
 export default function AiPlansTab() {
   const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, vendorSettings, vendors } = useCloudAi();
-  const [editing, setEditing] = useState(null); // "new" | plan object | null
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
   const [blockedDelete, setBlockedDelete] = useState(null);
-  const [blockedRemoveDefault, setBlockedRemoveDefault] = useState(false);
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
   }
 
-  function promptName(id) {
-    return prompts.find(p => p.id === id)?.name || "（已刪除）";
+  function getPrompt(id) {
+    return prompts.find(p => p.id === id);
+  }
+
+  // 顯示用：優先用 description（給 PM 更直觀的辨識），無則 fallback 到 name
+  function promptLabel(id) {
+    const p = getPrompt(id);
+    if (!p) return "（已刪除）";
+    return (p.description && p.description.trim()) || p.name;
   }
 
   function usedByVendorCount(planId) {
@@ -42,7 +47,6 @@ export default function AiPlansTab() {
       ...EMPTY_FORM,
       vlmProfileId: vlmProfiles[0]?.id || "",
       prompts: defaultPrompt ? [defaultPrompt.id] : [],
-      defaultPromptId: defaultPrompt?.id || null,
     });
     setEditing("new");
   }
@@ -55,7 +59,6 @@ export default function AiPlansTab() {
       dailyCap: plan.dailyCap === null ? "" : String(plan.dailyCap),
       description: plan.description || "",
       prompts: [...(plan.prompts || [])],
-      defaultPromptId: plan.defaultPromptId,
     });
     setEditing(plan);
   }
@@ -66,35 +69,32 @@ export default function AiPlansTab() {
   }
 
   function togglePrompt(promptId, checked) {
-    if (!checked) {
-      // 取消勾選預設 prompt 視為「刪除預設」→ 套用 D-029 硬阻擋
-      if (promptId === form.defaultPromptId) {
-        setBlockedRemoveDefault(true);
-        return;
+    setForm(f => {
+      if (checked) {
+        if (f.prompts.includes(promptId)) return f;
+        return { ...f, prompts: [...f.prompts, promptId] };
+      } else {
+        // 取消勾選：直接移除（若為預設，下一個自動接管，因為 prompts[0] 即預設）
+        return { ...f, prompts: f.prompts.filter(id => id !== promptId) };
       }
-      setForm(f => ({ ...f, prompts: f.prompts.filter(id => id !== promptId) }));
-    } else {
-      setForm(f => {
-        const nextPrompts = f.prompts.includes(promptId) ? f.prompts : [...f.prompts, promptId];
-        // 若原本沒有預設（第一次勾選時），自動把這個設為預設
-        const nextDefault = f.defaultPromptId || promptId;
-        return { ...f, prompts: nextPrompts, defaultPromptId: nextDefault };
-      });
-    }
+    });
   }
 
-  function setDefault(promptId) {
-    // 只允許把預設切到已勾選的 prompt
+  function movePrompt(promptId, direction) {
     setForm(f => {
-      if (!f.prompts.includes(promptId)) return f;
-      return { ...f, defaultPromptId: promptId };
+      const idx = f.prompts.indexOf(promptId);
+      if (idx < 0) return f;
+      const target = direction === "up" ? idx - 1 : idx + 1;
+      if (target < 0 || target >= f.prompts.length) return f;
+      const next = [...f.prompts];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return { ...f, prompts: next };
     });
   }
 
   function save() {
     if (!form.name.trim()) return;
     if (form.prompts.length === 0) return;
-    if (!form.defaultPromptId || !form.prompts.includes(form.defaultPromptId)) return;
     const dailyCap = form.dailyCap === "" || form.dailyCap === null ? null : Number(form.dailyCap);
     const payload = {
       name: form.name.trim(),
@@ -102,7 +102,6 @@ export default function AiPlansTab() {
       dailyCap,
       description: form.description,
       prompts: form.prompts,
-      defaultPromptId: form.defaultPromptId,
     };
     if (editing === "new") {
       setAiPlans(prev => [...prev, { id: "plan-" + Date.now(), ...payload }]);
@@ -120,11 +119,14 @@ export default function AiPlansTab() {
     }
   }
 
-  const isFormValid =
-    form.name.trim() &&
-    form.prompts.length > 0 &&
-    !!form.defaultPromptId &&
-    form.prompts.includes(form.defaultPromptId);
+  const isFormValid = form.name.trim() && form.prompts.length > 0;
+
+  // Modal 內 prompt 排序：先呈現已勾選（依方案內順序），再列未勾選（依 Prompt tab 順序）
+  const selectedSet = new Set(form.prompts);
+  const orderedPromptsForModal = [
+    ...form.prompts.map(id => getPrompt(id)).filter(Boolean),
+    ...prompts.filter(p => !selectedSet.has(p.id)),
+  ];
 
   return (
     <div>
@@ -141,7 +143,6 @@ export default function AiPlansTab() {
       <table className="w-full border-collapse text-kdc-table">
         <thead>
           <tr>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-12">項次</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">方案名稱</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">VLM Profile</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-24">Daily Cap</th>
@@ -152,61 +153,63 @@ export default function AiPlansTab() {
           </tr>
         </thead>
         <tbody>
-          {aiPlans.map((plan, i) => (
-            <tr key={plan.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
-              <td className="px-3 py-2.5 border-b border-kdc-border">{i + 1}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{plan.name}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border">
-                <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
-                  {profileName(plan.vlmProfileId)}
-                </span>
-              </td>
-              <td className="px-3 py-2.5 border-b border-kdc-border">
-                {plan.dailyCap === null ? "∞" : plan.dailyCap}
-              </td>
-              <td className="px-3 py-2.5 border-b border-kdc-border">
-                <div className="flex flex-wrap">
-                  {(plan.prompts || []).map(pid => {
-                    const isDefault = pid === plan.defaultPromptId;
-                    return (
-                      <span
-                        key={pid}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl text-[13px] mr-1 mb-0.5 ${
-                          isDefault
-                            ? 'bg-[#e8f5e9] text-[#2e7d32]'
-                            : 'bg-[#e8f0f8] text-kdc-primary'
-                        }`}
-                        title={isDefault ? "預設 prompt" : undefined}
-                      >
-                        {isDefault && <span aria-hidden>★</span>}
-                        {promptName(pid)}
-                      </span>
-                    );
-                  })}
-                </div>
-              </td>
-              <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{plan.description}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border text-center">{usedByVendorCount(plan.id)}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border">
-                <div className="flex items-center gap-1">
-                  <button
-                    className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
-                    title="編輯"
-                    onClick={() => openEdit(plan)}
-                  >
-                    <IconEdit />
-                  </button>
-                  <button
-                    className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
-                    title="刪除"
-                    onClick={() => tryDelete(plan)}
-                  >
-                    <IconTrash />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {aiPlans.map((plan, i) => {
+            const defaultId = plan.prompts?.[0];
+            return (
+              <tr key={plan.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
+                <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{plan.name}</td>
+                <td className="px-3 py-2.5 border-b border-kdc-border">
+                  <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
+                    {profileName(plan.vlmProfileId)}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 border-b border-kdc-border">
+                  {plan.dailyCap === null ? "∞" : plan.dailyCap}
+                </td>
+                <td className="px-3 py-2.5 border-b border-kdc-border">
+                  <div className="flex flex-wrap">
+                    {(plan.prompts || []).map(pid => {
+                      const isDefault = pid === defaultId;
+                      return (
+                        <span
+                          key={pid}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl text-[13px] mr-1 mb-0.5 ${
+                            isDefault
+                              ? 'bg-[#e8f5e9] text-[#2e7d32]'
+                              : 'bg-[#e8f0f8] text-kdc-primary'
+                          }`}
+                          title={isDefault ? "預設 prompt" : undefined}
+                        >
+                          {isDefault && <span aria-hidden>★</span>}
+                          {promptLabel(pid)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </td>
+                <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{plan.description}</td>
+                <td className="px-3 py-2.5 border-b border-kdc-border text-center">{usedByVendorCount(plan.id)}</td>
+                <td className="px-3 py-2.5 border-b border-kdc-border">
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
+                      title="編輯"
+                      onClick={() => openEdit(plan)}
+                    >
+                      <IconEdit />
+                    </button>
+                    <button
+                      className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
+                      title="刪除"
+                      onClick={() => tryDelete(plan)}
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -276,22 +279,45 @@ export default function AiPlansTab() {
           <div className="mb-4">
             <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">
               Prompts <span className="text-kdc-required">*</span>
-              <span className="text-[#999] text-xs font-normal ml-1">（勾選此方案使用的 Prompt；恰一個為預設。Prompt 內容請至「Prompts」分頁編輯）</span>
+              <span className="text-[#999] text-xs font-normal ml-1">（勾選此方案使用的 Prompt；第一個為預設，可用 ↑↓ 調整順序。Prompt 內容請至「Prompts」分頁編輯）</span>
             </label>
-            <div className="border border-kdc-border rounded-[5px] max-h-[260px] overflow-y-auto bg-white">
+            <div className="border border-kdc-border rounded-[5px] max-h-[300px] overflow-y-auto bg-white">
               {prompts.length === 0 ? (
                 <div className="px-3 py-6 text-center text-[#999] text-[13px]">
                   尚無 Prompt — 請先到「Prompts」分頁建立
                 </div>
               ) : (
-                prompts.map(p => {
-                  const checked = form.prompts.includes(p.id);
-                  const isDefault = p.id === form.defaultPromptId;
+                orderedPromptsForModal.map(p => {
+                  const checked = selectedSet.has(p.id);
+                  const idx = checked ? form.prompts.indexOf(p.id) : -1;
+                  const isDefault = checked && idx === 0;
+                  const canUp = checked && idx > 0;
+                  const canDown = checked && idx >= 0 && idx < form.prompts.length - 1;
                   return (
                     <div
                       key={p.id}
                       className={`flex items-center px-3 py-2 border-b last:border-b-0 border-kdc-border ${checked ? 'bg-[#f0f7ff]' : ''}`}
                     >
+                      <div className="flex items-center gap-0.5 mr-2">
+                        <button
+                          type="button"
+                          className={`p-1 rounded flex items-center ${canUp ? 'cursor-pointer hover:bg-[#e0e7ee] text-kdc-text' : 'opacity-25 cursor-not-allowed text-kdc-text'}`}
+                          title={canUp ? "上移" : "無法上移"}
+                          onClick={() => canUp && movePrompt(p.id, "up")}
+                          disabled={!canUp}
+                        >
+                          <IconArrowUp />
+                        </button>
+                        <button
+                          type="button"
+                          className={`p-1 rounded flex items-center ${canDown ? 'cursor-pointer hover:bg-[#e0e7ee] text-kdc-text' : 'opacity-25 cursor-not-allowed text-kdc-text'}`}
+                          title={canDown ? "下移" : "無法下移"}
+                          onClick={() => canDown && movePrompt(p.id, "down")}
+                          disabled={!canDown}
+                        >
+                          <IconArrowDown />
+                        </button>
+                      </div>
                       <label className="flex items-center flex-1 cursor-pointer">
                         <input
                           type="checkbox"
@@ -299,28 +325,16 @@ export default function AiPlansTab() {
                           onChange={e => togglePrompt(p.id, e.target.checked)}
                           className="mr-2.5 w-[18px] h-[18px] cursor-pointer"
                         />
-                        <span className="flex-1">
-                          <span className="text-kdc-body font-medium">{p.name}</span>
-                          {(p.tags || []).length > 0 && (
-                            <span className="text-[#999] text-xs ml-2">({(p.tags || []).join(", ")})</span>
+                        <span className="flex-1 flex items-center gap-2">
+                          <span className="text-kdc-body font-medium">
+                            {(p.description && p.description.trim()) || p.name}
+                          </span>
+                          {isDefault && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[11px] font-medium whitespace-nowrap bg-[#e8f5e9] text-[#2e7d32]">
+                              ★ 預設
+                            </span>
                           )}
                         </span>
-                      </label>
-                      <label
-                        className={`inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded ml-2 ${
-                          checked ? 'cursor-pointer hover:bg-[#e0e7ee] text-kdc-text' : 'cursor-not-allowed text-[#999]'
-                        }`}
-                        title={checked ? "設為預設" : "請先勾選此 Prompt 才能設為預設"}
-                      >
-                        <input
-                          type="radio"
-                          name="ai-plan-default-prompt"
-                          checked={isDefault}
-                          disabled={!checked}
-                          onChange={() => setDefault(p.id)}
-                          className={checked ? 'cursor-pointer' : 'cursor-not-allowed'}
-                        />
-                        <span>預設</span>
                       </label>
                     </div>
                   );
@@ -329,8 +343,8 @@ export default function AiPlansTab() {
             </div>
             <p className="text-xs text-[#999] mt-1">
               已勾選 {form.prompts.length} 個 Prompt
-              {form.defaultPromptId && form.prompts.includes(form.defaultPromptId) && (
-                <span>（預設：<span className="text-[#2e7d32] font-medium">{promptName(form.defaultPromptId)}</span>）</span>
+              {form.prompts.length > 0 && (
+                <span>（預設：<span className="text-[#2e7d32] font-medium">{promptLabel(form.prompts[0])}</span>）</span>
               )}
             </p>
           </div>
@@ -367,18 +381,6 @@ export default function AiPlansTab() {
           singleButton
           onConfirm={() => setBlockedDelete(null)}
           onCancel={() => setBlockedDelete(null)}
-        />
-      )}
-
-      {blockedRemoveDefault && (
-        <ConfirmDialog
-          title="無法取消預設 Prompt"
-          message="預設 Prompt 不可直接取消勾選，請先將其他 Prompt 設為預設後再取消。"
-          confirmText="我知道了"
-          variant="warning"
-          singleButton
-          onConfirm={() => setBlockedRemoveDefault(false)}
-          onCancel={() => setBlockedRemoveDefault(false)}
         />
       )}
     </div>

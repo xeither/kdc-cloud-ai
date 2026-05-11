@@ -10,8 +10,8 @@ export const INITIAL_PROMPTS = [
   { id: "p-4", name: "熊偵測（日文）", description: "熊出沒專用偵測場景", tags: ["ja", "垂直應用"], promptBody: '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}', updatedAt: "2026-04-03" },
 ];
 
-// AI Plan 的 prompts 為一組可在前端被使用者切換的 Prompt 參考（ID），其中一個為「預設」。
-// 編輯 Prompt 會即時影響所有引用該 Prompt 的 AI Plan（live reference，非 snapshot）。
+// AI Plan 的 prompts 為一組可在前端被使用者切換的 Prompt 參考（ID），順序具語意：
+// 第一個（prompts[0]）即為「預設」。編輯 Prompt 會即時影響所有引用該 Prompt 的 AI Plan（live reference，非 snapshot）。
 export const INITIAL_AI_PLANS = [
   {
     id: "plan-1",
@@ -20,7 +20,6 @@ export const INITIAL_AI_PLANS = [
     dailyCap: 100,
     description: "標準版，語系切換免費",
     prompts: ["p-1", "p-2", "p-3"],
-    defaultPromptId: "p-1",
   },
   {
     id: "plan-2",
@@ -29,7 +28,6 @@ export const INITIAL_AI_PLANS = [
     dailyCap: null,
     description: "專用場景",
     prompts: ["p-4"],
-    defaultPromptId: "p-4",
   },
   {
     id: "plan-3",
@@ -38,7 +36,6 @@ export const INITIAL_AI_PLANS = [
     dailyCap: 100,
     description: "中國區合規 VLM",
     prompts: ["p-1"],
-    defaultPromptId: "p-1",
   },
 ];
 

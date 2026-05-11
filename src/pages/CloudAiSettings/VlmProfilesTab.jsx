@@ -64,7 +64,6 @@ export default function VlmProfilesTab() {
       <table className="w-full border-collapse text-kdc-table">
         <thead>
           <tr>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-12">項次</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">名稱</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">Provider</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">Model Version</th>
@@ -76,7 +75,6 @@ export default function VlmProfilesTab() {
         <tbody>
           {vlmProfiles.map((p, i) => (
             <tr key={p.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
-              <td className="px-3 py-2.5 border-b border-kdc-border">{i + 1}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{p.name}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border">
                 <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e3f2fd] text-[#1565c0]">{p.provider}</span>

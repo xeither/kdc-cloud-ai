@@ -115,10 +115,8 @@ export default function PromptsTab() {
       <table className="w-full border-collapse text-kdc-table">
         <thead>
           <tr>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-12">項次</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">名稱</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">說明</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">標籤</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-28">更新日期</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-24">功能</th>
           </tr>
@@ -126,18 +124,8 @@ export default function PromptsTab() {
         <tbody>
           {prompts.map((p, i) => (
             <tr key={p.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
-              <td className="px-3 py-2.5 border-b border-kdc-border">{i + 1}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{p.name}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{p.description}</td>
-              <td className="px-3 py-2.5 border-b border-kdc-border">
-                <div className="flex flex-wrap gap-1">
-                  {p.tags.map(tag => (
-                    <span key={tag} className="inline-flex items-center gap-1 bg-[#e8f0f8] text-kdc-primary px-2.5 py-0.5 rounded-xl text-[13px]">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </td>
               <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{p.updatedAt}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border">
                 <div className="flex items-center gap-1">

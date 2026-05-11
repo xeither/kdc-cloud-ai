@@ -80,7 +80,6 @@ export default function VendorAiSettingsTab() {
         <table className="w-full border-collapse text-kdc-table mb-3">
           <thead>
             <tr>
-              <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-12">項次</th>
               <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">方案名稱</th>
               <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">VLM Profile</th>
               <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-24">Daily Cap</th>
@@ -93,7 +92,6 @@ export default function VendorAiSettingsTab() {
               if (!plan) return null;
               return (
                 <tr key={planId} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
-                  <td className="px-3 py-2.5 border-b border-kdc-border">{i + 1}</td>
                   <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{plan.name}</td>
                   <td className="px-3 py-2.5 border-b border-kdc-border">
                     <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
@@ -117,7 +115,7 @@ export default function VendorAiSettingsTab() {
             })}
             {globalPlans.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-kdc-body text-[#999]">尚無全域方案</td>
+                <td colSpan={4} className="px-3 py-6 text-center text-kdc-body text-[#999]">尚無全域方案</td>
               </tr>
             )}
           </tbody>
@@ -147,7 +145,6 @@ export default function VendorAiSettingsTab() {
             <table className="w-full border-collapse text-kdc-table">
               <thead>
                 <tr>
-                  <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-12">項次</th>
                   <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[180px]">Vendor 名稱</th>
                   <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">專屬方案</th>
                 </tr>
@@ -161,7 +158,6 @@ export default function VendorAiSettingsTab() {
                       key={v.id}
                       className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}
                     >
-                      <td className="px-3 py-2.5 border-b border-kdc-border align-top">{i + 1}</td>
                       <td className="px-3 py-2.5 border-b border-kdc-border align-top">
                         <div className="font-medium">{v.name}</div>
                         <div className="text-[12px] text-[#999]">{v.vid}</div>
