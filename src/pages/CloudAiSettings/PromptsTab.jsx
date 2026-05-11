@@ -276,7 +276,7 @@ export default function PromptsTab() {
       {dupName && (
         <ConfirmDialog
           title="名稱重複"
-          message={`已存在名稱為「${dupName}」的 Prompt Template，請改用其他名稱。`}
+          message={`已存在名稱為「${dupName}」的 Prompt，請改用其他名稱。`}
           confirmText="我知道了"
           variant="warning"
           singleButton
