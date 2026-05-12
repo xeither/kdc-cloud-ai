@@ -68,7 +68,7 @@ export default function VsaasApplicationForm() {
   const virtualGlobalRows = selectedCustomerId
     ? globalPlans
         .filter(pid => !explicitPlanIds.has(pid))
-        .map(pid => ({ planId: pid, realm: "Wyze Labs", env: "Prod", _global: true }))
+        .map(pid => ({ planId: pid, realm: "TUTK", env: "Prod", _global: true }))
     : [];
   const allBindingOptions = selectedCustomerId
     ? [

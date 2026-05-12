@@ -236,9 +236,11 @@ export const SYSTEM_FEATURE_LIST = [
 ];
 
 // Cloud AI 加值服務（per-customer）— Phase 2 新增。
-// realm 選項 = mock vendor 名稱；env 選項 = Prod / STG / RD
-export const REALM_OPTIONS = ["Wyze Labs", "SKT", "徠福科技"];
+// realm 選項：「TUTK」為全域 realm（全域方案虛擬列預設值）；其餘為 mock vendor 名稱。
+// env 選項：Prod / STG / RD
+export const REALM_OPTIONS = ["TUTK", "Wyze Labs", "SKT", "徠福科技"];
 export const ENV_OPTIONS = ["Prod", "STG", "RD"];
+export const GLOBAL_REALM = "TUTK"; // 虛擬全域列寫死的 realm
 
 // 每筆 binding：{ id, realm, env, planId }
 // PM 可在客戶頁新增多筆，同 (realm, env) 可重複（代表該環境綁多個方案）

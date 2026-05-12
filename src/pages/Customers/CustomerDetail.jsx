@@ -5,7 +5,7 @@ import { IconTrash, IconPlus } from '../../icons';
 import {
   CUSTOMER_ATTRIBUTES, STATUS_OPTIONS, IMPORTANCE_OPTIONS,
   LANGUAGE_OPTIONS, GROUP_OPTIONS, SALES_OPTIONS, FAE_OPTIONS,
-  SYSTEM_FEATURE_LIST, REALM_OPTIONS, ENV_OPTIONS,
+  SYSTEM_FEATURE_LIST, REALM_OPTIONS, ENV_OPTIONS, GLOBAL_REALM,
 } from '../../data/customersData';
 
 // Tab 順序對齊 KDC Internal，最後一個「Cloud AI」為本模組新增（v1.15）
@@ -321,7 +321,7 @@ function CloudAiTab({ customer }) {
     .filter(pid => !explicitPlanIds.has(pid))
     .map(pid => ({
       id: `auto-${pid}`,
-      realm: REALM_OPTIONS[0],
+      realm: GLOBAL_REALM,  // 全域 realm 寫死為 TUTK
       env: ENV_OPTIONS[0],
       planId: pid,
       _virtual: true,
