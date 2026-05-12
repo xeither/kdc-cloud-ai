@@ -6,7 +6,7 @@ import {
 } from '../sidebar-icons';
 
 const sidebarItems = [
-  { id: "customer", label: "客戶資訊", icon: IconCustomer, disabled: true },
+  { id: "customer", label: "客戶資訊", icon: IconCustomer, path: "/customers" },
   { id: "supplier", label: "供應商資訊", icon: IconSupplier, disabled: true },
   { id: "quote", label: "報價資訊", icon: IconQuote, disabled: true },
   { id: "applications", label: "申請單管理", icon: IconApplication, path: "/applications" },
@@ -29,6 +29,7 @@ export default function Sidebar() {
   const isActive = (item) => {
     if (!item.path) return false;
     if (item.id === "applications") return location.pathname.startsWith("/applications");
+    if (item.id === "customer") return location.pathname.startsWith("/customers");
     return location.pathname === item.path;
   };
 
