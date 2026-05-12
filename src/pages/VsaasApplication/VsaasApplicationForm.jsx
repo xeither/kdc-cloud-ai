@@ -4,12 +4,12 @@ import { IconCalendar } from '../../icons';
 import Toggle from '../../components/Toggle';
 
 export default function VsaasApplicationForm() {
-  const { aiPlans, globalPlans, vendors, vendorSettings } = useCloudAi();
-  const [selectedVendorId, setSelectedVendorId] = useState("");
-  const [vendorInput, setVendorInput] = useState("");
+  const { aiPlans, globalPlans, customers, customerCloudAi } = useCloudAi();
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [customerInput, setCustomerInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [f, setF] = useState({
-    vendorId: "", salesPerson: "",
+    customerId: "", salesPerson: "",
     serviceType: "test", piPoNo: "", region: [], paymentStatus: "prepaid",
     paymentRef: "", creditTerm: "", overdueStatus: "none", overdueCurrency: "USD", overdueAmount: "",
     recordType: "event", autoRenew: false, recordSeconds: "30", cycleDelete: true,
@@ -27,39 +27,45 @@ export default function VsaasApplicationForm() {
   };
   const planName = (id) => aiPlans.find(p => p.id === id)?.name || id;
 
-  // Autocomplete: filter vendors by VID or name as user types
-  const filteredVendors = vendorInput.trim() === ""
-    ? vendors
-    : vendors.filter(v =>
-        v.vid.toLowerCase().includes(vendorInput.toLowerCase()) ||
-        v.name.toLowerCase().includes(vendorInput.toLowerCase())
+  // 客戶顯示字串：「客戶代碼(VID) 公司名稱」對齊 KDC 原 autocomplete 格式
+  const customerLabel = (c) => `${c.id}(${c.vid}) ${c.name}`;
+
+  // Autocomplete: filter by id, vid, or name
+  const filteredCustomers = customerInput.trim() === ""
+    ? customers
+    : customers.filter(c =>
+        c.id.toLowerCase().includes(customerInput.toLowerCase()) ||
+        (c.vid || "").toLowerCase().includes(customerInput.toLowerCase()) ||
+        c.name.toLowerCase().includes(customerInput.toLowerCase())
       );
 
-  const handleVendorInputChange = (val) => {
-    setVendorInput(val);
+  const handleCustomerInputChange = (val) => {
+    setCustomerInput(val);
     setShowSuggestions(true);
-    // If typed value no longer matches the selected vendor's display string, clear selection
-    if (selectedVendorId) {
-      const sel = vendors.find(v => v.id === selectedVendorId);
-      if (sel && val !== `${sel.vid} ${sel.name}`) {
-        setSelectedVendorId("");
-        u("vendorId", "");
+    // If typed value no longer matches the selected customer's display string, clear selection
+    if (selectedCustomerId) {
+      const sel = customers.find(c => c.id === selectedCustomerId);
+      if (sel && val !== customerLabel(sel)) {
+        setSelectedCustomerId("");
+        u("customerId", "");
         u("cloudAiPlan", "");
       }
     }
   };
 
-  const selectVendor = (vendor) => {
-    setVendorInput(`${vendor.vid} ${vendor.name}`);
-    setSelectedVendorId(vendor.id);
-    u("vendorId", vendor.id);
+  const selectCustomer = (customer) => {
+    setCustomerInput(customerLabel(customer));
+    setSelectedCustomerId(customer.id);
+    u("customerId", customer.id);
     u("cloudAiPlan", "");
     setShowSuggestions(false);
   };
 
-  // Available AI Plans for selected vendor = global + vendor-specific
-  const vs = vendorSettings[selectedVendorId] || { specificPlans: [] };
-  const vendorAvailablePlans = [...globalPlans, ...(vs.specificPlans || [])];
+  // AI Plan 選項 = 共用區 + 該客戶的專屬綁定（去重；共用區優先標示）
+  const customerBindings = customerCloudAi[selectedCustomerId]?.bindings || [];
+  const specificPlanIds = [...new Set(
+    customerBindings.map(b => b.planId).filter(id => id && !globalPlans.includes(id))
+  )];
 
   const labelCls = "bg-kdc-form-label px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
   const labelDarkCls = "bg-kdc-form-label-dark px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
@@ -90,22 +96,22 @@ export default function VsaasApplicationForm() {
             <div className="relative">
               <input
                 className={`${inputCls} w-[360px]`}
-                value={vendorInput}
-                onChange={e => handleVendorInputChange(e.target.value)}
+                value={customerInput}
+                onChange={e => handleCustomerInputChange(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="輸入 VID 或客戶名稱"
+                placeholder="輸入客戶代碼 / VID / 客戶名稱"
               />
-              {showSuggestions && filteredVendors.length > 0 && (
+              {showSuggestions && filteredCustomers.length > 0 && (
                 <div className="absolute top-full left-0 mt-1 w-[360px] bg-white border border-kdc-border rounded-[5px] shadow-lg z-10 max-h-[200px] overflow-y-auto">
-                  {filteredVendors.map(v => (
+                  {filteredCustomers.map(c => (
                     <div
-                      key={v.id}
+                      key={c.id}
                       className="px-3 py-2 cursor-pointer hover:bg-[#e8f0f8] text-kdc-body flex items-center gap-3"
-                      onMouseDown={() => selectVendor(v)}
+                      onMouseDown={() => selectCustomer(c)}
                     >
-                      <span className="text-[#666] font-mono text-[13px]">{v.vid}</span>
-                      <span>{v.name}</span>
+                      <span className="text-[#666] font-mono text-[13px]">{c.id}({c.vid})</span>
+                      <span>{c.name}</span>
                     </div>
                   ))}
                 </div>
@@ -227,10 +233,10 @@ export default function VsaasApplicationForm() {
           <div className="flex">
             <div className="bg-[#e3f0fd] px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap"><span className="text-kdc-required mr-0.5">*</span>AI Plan :</div>
             <div className={valCls}>
-              <select className={`${selectCls} w-[300px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedVendorId}>
-                <option value="">{selectedVendorId ? "— 請選擇 AI Plan —" : "— 請先選擇客戶 —"}</option>
+              <select className={`${selectCls} w-[300px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedCustomerId}>
+                <option value="">{selectedCustomerId ? "— 請選擇 AI Plan —" : "— 請先選擇客戶 —"}</option>
                 {globalPlans.map(planId => <option key={planId} value={planId}>[共用] {planName(planId)}</option>)}
-                {(vs.specificPlans || []).map(planId => <option key={planId} value={planId}>[專屬] {planName(planId)}</option>)}
+                {specificPlanIds.map(planId => <option key={planId} value={planId}>[專屬] {planName(planId)}</option>)}
               </select>
               {f.cloudAiPlan && <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">{planName(f.cloudAiPlan)}</span>}
             </div>

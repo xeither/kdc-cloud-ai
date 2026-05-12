@@ -39,16 +39,4 @@ export const INITIAL_AI_PLANS = [
   },
 ];
 
-export const INITIAL_VENDORS = [
-  { id: "v-1", name: "Wyze Labs", vid: "V:1234" },
-  { id: "v-2", name: "SKT", vid: "V:5678" },
-  { id: "v-3", name: "徠福科技", vid: "V:9012" },
-];
-
 export const INITIAL_GLOBAL_PLANS = ["plan-1", "plan-3"];
-
-export const INITIAL_VENDOR_SETTINGS = {
-  "v-1": { specificPlans: ["plan-2"] },
-  "v-2": { specificPlans: [] },
-  "v-3": { specificPlans: [] },
-};

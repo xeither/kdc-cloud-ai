@@ -15,7 +15,7 @@ const EMPTY_FORM = {
 };
 
 export default function AiPlansTab() {
-  const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, vendorSettings, vendors } = useCloudAi();
+  const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, customers, customerCloudAi } = useCloudAi();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
@@ -36,9 +36,12 @@ export default function AiPlansTab() {
     return (p.description && p.description.trim()) || p.name;
   }
 
-  function usedByVendorCount(planId) {
-    if (globalPlans.includes(planId)) return vendors.length;
-    return vendors.filter(v => (vendorSettings[v.id]?.specificPlans || []).includes(planId)).length;
+  function usedByCustomerCount(planId) {
+    if (globalPlans.includes(planId)) return customers.length;
+    return customers.filter(c => {
+      const bindings = customerCloudAi[c.id]?.bindings || [];
+      return bindings.some(b => b.planId === planId);
+    }).length;
   }
 
   function openNew() {
@@ -112,7 +115,7 @@ export default function AiPlansTab() {
   }
 
   function tryDelete(plan) {
-    if (usedByVendorCount(plan.id) > 0) {
+    if (usedByCustomerCount(plan.id) > 0) {
       setBlockedDelete(plan);
     } else {
       setDeleting(plan);
@@ -148,7 +151,7 @@ export default function AiPlansTab() {
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-24">Daily Cap</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">Prompts</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">說明</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-16">Vendors</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-16">客戶</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-20">功能</th>
           </tr>
         </thead>
@@ -188,7 +191,7 @@ export default function AiPlansTab() {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{plan.description}</td>
-                <td className="px-3 py-2.5 border-b border-kdc-border text-center">{usedByVendorCount(plan.id)}</td>
+                <td className="px-3 py-2.5 border-b border-kdc-border text-center">{usedByCustomerCount(plan.id)}</td>
                 <td className="px-3 py-2.5 border-b border-kdc-border">
                   <div className="flex items-center gap-1">
                     <button
@@ -375,7 +378,7 @@ export default function AiPlansTab() {
       {blockedDelete && (
         <ConfirmDialog
           title="無法刪除"
-          message={`「${blockedDelete.name}」目前有 ${usedByVendorCount(blockedDelete.id)} 個 Vendor 使用中，請先到「Vendor AI 設定」將此方案移除後再刪除。`}
+          message={`「${blockedDelete.name}」目前有 ${usedByCustomerCount(blockedDelete.id)} 個客戶使用中，請先到「客戶資訊」頁面該客戶的「Cloud AI」tab 將此方案移除後再刪除。`}
           confirmText="我知道了"
           variant="warning"
           singleButton
