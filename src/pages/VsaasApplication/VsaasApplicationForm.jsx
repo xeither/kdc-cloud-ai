@@ -61,11 +61,30 @@ export default function VsaasApplicationForm() {
     setShowSuggestions(false);
   };
 
-  // AI Plan 選項 = 共用區 + 該客戶的專屬綁定（去重；共用區優先標示）
-  const customerBindings = customerCloudAi[selectedCustomerId]?.bindings || [];
-  const specificPlanIds = [...new Set(
-    customerBindings.map(b => b.planId).filter(id => id && !globalPlans.includes(id))
-  )];
+  // AI Plan 選項 = 客戶 Cloud AI tab 的完整綁定（合併虛擬全域列 + 客戶專屬 bindings）
+  // 每個選項一筆 (planId, realm, env) 三元組，UI 顯示為「方案/realm/env」
+  const explicit = customerCloudAi[selectedCustomerId]?.bindings || [];
+  const explicitPlanIds = new Set(explicit.map(b => b.planId));
+  const virtualGlobalRows = selectedCustomerId
+    ? globalPlans
+        .filter(pid => !explicitPlanIds.has(pid))
+        .map(pid => ({ planId: pid, realm: "Wyze Labs", env: "Prod", _global: true }))
+    : [];
+  const allBindingOptions = selectedCustomerId
+    ? [
+        ...virtualGlobalRows,
+        ...explicit.map(b => ({ planId: b.planId, realm: b.realm, env: b.env, _global: globalPlans.includes(b.planId) })),
+      ]
+    : [];
+  // 同一 (planId, realm, env) 重複時去重
+  const seen = new Set();
+  const dedupedOptions = allBindingOptions.filter(o => {
+    const k = `${o.planId}|${o.realm}|${o.env}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  const optionValue = (o) => `${o.planId}|${o.realm}|${o.env}`;
 
   const labelCls = "bg-kdc-form-label px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
   const labelDarkCls = "bg-kdc-form-label-dark px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
@@ -233,12 +252,22 @@ export default function VsaasApplicationForm() {
           <div className="flex">
             <div className="bg-[#e3f0fd] px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap"><span className="text-kdc-required mr-0.5">*</span>AI Plan :</div>
             <div className={valCls}>
-              <select className={`${selectCls} w-[300px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedCustomerId}>
+              <select className={`${selectCls} w-[420px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedCustomerId}>
                 <option value="">{selectedCustomerId ? "— 請選擇 AI Plan —" : "— 請先選擇客戶 —"}</option>
-                {globalPlans.map(planId => <option key={planId} value={planId}>[共用] {planName(planId)}</option>)}
-                {specificPlanIds.map(planId => <option key={planId} value={planId}>[專屬] {planName(planId)}</option>)}
+                {dedupedOptions.map(o => (
+                  <option key={optionValue(o)} value={optionValue(o)}>
+                    {o._global ? "[共用]" : "[專屬]"} {planName(o.planId)} / {o.realm} / {o.env}
+                  </option>
+                ))}
               </select>
-              {f.cloudAiPlan && <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">{planName(f.cloudAiPlan)}</span>}
+              {f.cloudAiPlan && (() => {
+                const [pid, realm, env] = f.cloudAiPlan.split("|");
+                return (
+                  <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">
+                    {planName(pid)} / {realm} / {env}
+                  </span>
+                );
+              })()}
             </div>
           </div>
         )}

@@ -312,13 +312,29 @@ function PlaceholderTab({ name }) {
 
 function CloudAiTab({ customer }) {
   const { aiPlans, globalPlans, customerCloudAi, setCustomerCloudAi } = useCloudAi();
-  const entry = customerCloudAi[customer.id] || { bindings: [] };
-  const bindings = entry.bindings || [];
+  const explicit = customerCloudAi[customer.id]?.bindings || [];
+
+  // 虛擬列：globalPlans 中尚未在 bindings 出現的 plan，自動帶入一列（預設 realm/env）
+  // 任何編輯動作會把虛擬列 materialize 成真實 binding 存到 customerCloudAi
+  const explicitPlanIds = new Set(explicit.map(b => b.planId));
+  const virtualRows = globalPlans
+    .filter(pid => !explicitPlanIds.has(pid))
+    .map(pid => ({
+      id: `auto-${pid}`,
+      realm: REALM_OPTIONS[0],
+      env: ENV_OPTIONS[0],
+      planId: pid,
+      _virtual: true,
+    }));
+  const allRows = [
+    ...virtualRows,
+    ...explicit.map(b => ({ ...b, _virtual: false })),
+  ];
 
   function update(patch) {
     setCustomerCloudAi(prev => ({
       ...prev,
-      [customer.id]: { ...(prev[customer.id] || {}), ...patch },
+      [customer.id]: { ...(prev[customer.id] || {}), bindings: patch },
     }));
   }
 
@@ -329,20 +345,39 @@ function CloudAiTab({ customer }) {
       env: ENV_OPTIONS[0],
       planId: aiPlans[0]?.id || "",
     };
-    update({ bindings: [...bindings, newBinding] });
+    update([...explicit, newBinding]);
   }
 
-  function updateBinding(id, patch) {
-    update({ bindings: bindings.map(b => b.id === id ? { ...b, ...patch } : b) });
+  function materializeVirtual(virtualRow, patch) {
+    const newBinding = {
+      id: "cb-" + Date.now(),
+      realm: virtualRow.realm,
+      env: virtualRow.env,
+      planId: virtualRow.planId,
+      ...patch,
+    };
+    update([...explicit, newBinding]);
   }
 
-  function removeBinding(id) {
-    update({ bindings: bindings.filter(b => b.id !== id) });
+  function updateRow(row, patch) {
+    if (row._virtual) {
+      materializeVirtual(row, patch);
+    } else {
+      update(explicit.map(b => b.id === row.id ? { ...b, ...patch } : b));
+    }
+  }
+
+  function removeRow(row) {
+    if (row._virtual) return; // 虛擬全域列不可從客戶頁刪除
+    update(explicit.filter(b => b.id !== row.id));
   }
 
   function planLabel(plan) {
-    const isGlobal = globalPlans.includes(plan.id);
-    return isGlobal ? `[共用] ${plan.name}` : plan.name;
+    return plan.name;
+  }
+
+  function isGlobal(planId) {
+    return globalPlans.includes(planId);
   }
 
   return (
@@ -351,8 +386,8 @@ function CloudAiTab({ customer }) {
         <div>
           <h3 className="text-kdc-table font-medium text-kdc-primary m-0">Cloud AI 加值服務</h3>
           <p className="text-[12px] text-[#999] mt-1">
-            為此客戶的不同 realm × env 綁定 AI Plan；同一 realm/env 可綁多個方案。
-            可選方案以「<span className="text-kdc-primary">[共用]</span>」標示為全域方案（Vendor AI Settings 共用區）。
+            列表自動帶入全域方案（綠 chip），可額外綁定客戶專屬方案（橘 chip）。同一 realm/env 可綁多個方案；
+            全域方案要從這裡完全移除，請至「Cloud AI 設定 → 全域方案」tab 操作。
           </p>
         </div>
         <button
@@ -366,6 +401,7 @@ function CloudAiTab({ customer }) {
       <table className="w-full border-collapse text-kdc-table">
         <thead>
           <tr>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[110px]">來源</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[180px]">Realm</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[140px]">Env</th>
             <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">AI Plan</th>
@@ -373,54 +409,74 @@ function CloudAiTab({ customer }) {
           </tr>
         </thead>
         <tbody>
-          {bindings.length === 0 ? (
+          {allRows.length === 0 ? (
             <tr>
-              <td colSpan={4} className="px-3 py-10 text-center text-[14px] text-[#999]">
+              <td colSpan={5} className="px-3 py-10 text-center text-[14px] text-[#999]">
                 尚未綁定任何 AI Plan — 點右上「+ 新增綁定」加入第一筆
               </td>
             </tr>
-          ) : bindings.map(b => (
-            <tr key={b.id} className="border-b border-kdc-border">
-              <td className="px-3 py-2">
-                <select
-                  className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                  value={b.realm}
-                  onChange={e => updateBinding(b.id, { realm: e.target.value })}
-                >
-                  {REALM_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </td>
-              <td className="px-3 py-2">
-                <select
-                  className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                  value={b.env}
-                  onChange={e => updateBinding(b.id, { env: e.target.value })}
-                >
-                  {ENV_OPTIONS.map(env => <option key={env} value={env}>{env}</option>)}
-                </select>
-              </td>
-              <td className="px-3 py-2">
-                <select
-                  className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                  value={b.planId}
-                  onChange={e => updateBinding(b.id, { planId: e.target.value })}
-                >
-                  {aiPlans.map(p => (
-                    <option key={p.id} value={p.id}>{planLabel(p)}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-3 py-2">
-                <button
-                  className="bg-transparent border-none cursor-pointer text-kdc-text p-1 rounded hover:bg-[#e0e7ee] flex items-center"
-                  title="移除綁定"
-                  onClick={() => removeBinding(b.id)}
-                >
-                  <IconTrash />
-                </button>
-              </td>
-            </tr>
-          ))}
+          ) : allRows.map(b => {
+            const global = isGlobal(b.planId);
+            return (
+              <tr key={b.id} className="border-b border-kdc-border">
+                <td className="px-3 py-2">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium ${
+                      global
+                        ? 'bg-[#e8f5e9] text-[#2e7d32]'
+                        : 'bg-[#fff3e0] text-[#e65100]'
+                    }`}
+                    title={global ? "來自 Cloud AI 設定 → 全域方案" : "客戶專屬方案"}
+                  >
+                    {global ? "全域" : "專屬"}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <select
+                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
+                    value={b.realm}
+                    onChange={e => updateRow(b, { realm: e.target.value })}
+                  >
+                    {REALM_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  <select
+                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
+                    value={b.env}
+                    onChange={e => updateRow(b, { env: e.target.value })}
+                  >
+                    {ENV_OPTIONS.map(env => <option key={env} value={env}>{env}</option>)}
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  <select
+                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
+                    value={b.planId}
+                    onChange={e => updateRow(b, { planId: e.target.value })}
+                  >
+                    {aiPlans.map(p => (
+                      <option key={p.id} value={p.id}>{planLabel(p)}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  <button
+                    className={`bg-transparent border-none p-1 rounded flex items-center ${
+                      b._virtual
+                        ? 'opacity-25 cursor-not-allowed text-kdc-text'
+                        : 'cursor-pointer text-kdc-text hover:bg-[#e0e7ee]'
+                    }`}
+                    title={b._virtual ? "全域方案不可從客戶頁刪除（請到 Cloud AI 設定 → 全域方案 tab 移除）" : "移除綁定"}
+                    onClick={() => removeRow(b)}
+                    disabled={b._virtual}
+                  >
+                    <IconTrash />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
