@@ -249,7 +249,7 @@ export const INITIAL_CUSTOMER_CLOUD_AI = {
     bindings: [
       { id: "cb-1", realm: "Wyze Labs", env: "Prod", planId: "plan-2" },
       { id: "cb-2", realm: "Wyze Labs", env: "STG",  planId: "plan-2" },
-      { id: "cb-3", realm: "Wyze Labs", env: "Prod", planId: "plan-1" },
+      { id: "cb-3", realm: "TUTK", env: "Prod", planId: "plan-1" },
     ],
   },
   "V-5678": {

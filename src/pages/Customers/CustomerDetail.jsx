@@ -339,11 +339,14 @@ function CloudAiTab({ customer }) {
   }
 
   function addBinding() {
+    // 新增綁定預設為「專屬」方案 — 挑第一個非 global 的 plan，realm 用第一個非 TUTK 的選項
+    const firstNonGlobalPlan = aiPlans.find(p => !globalPlans.includes(p.id)) || aiPlans[0];
+    const firstNonGlobalRealm = REALM_OPTIONS.find(r => r !== GLOBAL_REALM) || REALM_OPTIONS[0];
     const newBinding = {
       id: "cb-" + Date.now(),
-      realm: REALM_OPTIONS[0],
+      realm: firstNonGlobalRealm,
       env: ENV_OPTIONS[0],
-      planId: aiPlans[0]?.id || "",
+      planId: firstNonGlobalPlan?.id || "",
     };
     update([...explicit, newBinding]);
   }
@@ -360,10 +363,15 @@ function CloudAiTab({ customer }) {
   }
 
   function updateRow(row, patch) {
+    // 切換到 global plan 時，realm 強制為 TUTK
+    const finalPatch = { ...patch };
+    if (patch.planId && globalPlans.includes(patch.planId)) {
+      finalPatch.realm = GLOBAL_REALM;
+    }
     if (row._virtual) {
-      materializeVirtual(row, patch);
+      materializeVirtual(row, finalPatch);
     } else {
-      update(explicit.map(b => b.id === row.id ? { ...b, ...patch } : b));
+      update(explicit.map(b => b.id === row.id ? { ...b, ...finalPatch } : b));
     }
   }
 
@@ -433,11 +441,19 @@ function CloudAiTab({ customer }) {
                 </td>
                 <td className="px-3 py-2">
                   <select
-                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                    value={b.realm}
+                    className={`h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc outline-none w-full focus:border-kdc-primary ${
+                      global ? 'bg-[#f5f5f5] text-[#666] cursor-not-allowed' : 'bg-white cursor-pointer'
+                    }`}
+                    value={global ? GLOBAL_REALM : b.realm}
                     onChange={e => updateRow(b, { realm: e.target.value })}
+                    disabled={global}
+                    title={global ? "全域方案 realm 固定為 TUTK，不可修改" : ""}
                   >
-                    {REALM_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                    {global ? (
+                      <option value={GLOBAL_REALM}>{GLOBAL_REALM}</option>
+                    ) : (
+                      REALM_OPTIONS.filter(r => r !== GLOBAL_REALM).map(r => <option key={r} value={r}>{r}</option>)
+                    )}
                   </select>
                 </td>
                 <td className="px-3 py-2">

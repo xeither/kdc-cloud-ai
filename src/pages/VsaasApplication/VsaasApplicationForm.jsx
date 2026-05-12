@@ -73,7 +73,11 @@ export default function VsaasApplicationForm() {
   const allBindingOptions = selectedCustomerId
     ? [
         ...virtualGlobalRows,
-        ...explicit.map(b => ({ planId: b.planId, realm: b.realm, env: b.env, _global: globalPlans.includes(b.planId) })),
+        ...explicit.map(b => {
+          const isGlobalPlan = globalPlans.includes(b.planId);
+          // 全域方案 realm 寫死為 TUTK，忽略 binding 中的 realm 值
+          return { planId: b.planId, realm: isGlobalPlan ? "TUTK" : b.realm, env: b.env, _global: isGlobalPlan };
+        }),
       ]
     : [];
   // 同一 (planId, realm, env) 重複時去重
