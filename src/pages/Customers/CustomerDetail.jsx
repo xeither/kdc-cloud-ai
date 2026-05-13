@@ -4,11 +4,12 @@ import { useCloudAi } from '../../context/CloudAiContext';
 import { useP2pTrace } from '../../context/P2pTraceContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Toggle from '../../components/Toggle';
+import RegionEnvSelector from '../../components/RegionEnvSelector';
 import { IconTrash, IconPlus } from '../../icons';
 import {
   CUSTOMER_ATTRIBUTES, STATUS_OPTIONS, IMPORTANCE_OPTIONS,
   LANGUAGE_OPTIONS, GROUP_OPTIONS, SALES_OPTIONS, FAE_OPTIONS,
-  SYSTEM_FEATURE_LIST, REALM_OPTIONS, ENV_OPTIONS, GLOBAL_REALM,
+  SYSTEM_FEATURE_LIST,
 } from '../../data/customersData';
 
 // Tab 順序對齊 KDC Internal。最後兩個（Cloud AI / P2P Insight）為本 POC 新增模組。
@@ -409,189 +410,117 @@ function P2pInsightTab({ customer }) {
   );
 }
 
+// v1.19：客戶 Cloud AI tab 改為 (region, env) scope + 勾選清單。
+// - 全域方案：自動勾選 + 不可取消（Q1=a），客戶頁不能取消全域套用
+// - 專屬方案：使用者勾選，存到 customerCloudAi[id].selectedSpecificPlanIds
 function CloudAiTab({ customer }) {
   const { aiPlans, globalPlans, customerCloudAi, setCustomerCloudAi } = useCloudAi();
-  const explicit = customerCloudAi[customer.id]?.bindings || [];
+  const [region, setRegion] = useState("亞洲");
+  const [env, setEnv] = useState("Prod");
 
-  // 虛擬列：globalPlans 中尚未在 bindings 出現的 plan，自動帶入一列（預設 realm/env）
-  // 任何編輯動作會把虛擬列 materialize 成真實 binding 存到 customerCloudAi
-  const explicitPlanIds = new Set(explicit.map(b => b.planId));
-  const virtualRows = globalPlans
-    .filter(pid => !explicitPlanIds.has(pid))
-    .map(pid => ({
-      id: `auto-${pid}`,
-      realm: GLOBAL_REALM,  // 全域 realm 寫死為 TUTK
-      env: ENV_OPTIONS[0],
-      planId: pid,
-      _virtual: true,
-    }));
-  const allRows = [
-    ...virtualRows,
-    ...explicit.map(b => ({ ...b, _virtual: false })),
-  ];
+  const selectedSpecific = customerCloudAi[customer.id]?.selectedSpecificPlanIds || [];
 
-  function update(patch) {
-    setCustomerCloudAi(prev => ({
-      ...prev,
-      [customer.id]: { ...(prev[customer.id] || {}), bindings: patch },
-    }));
-  }
+  // 當前 (region, env) scope 下所有 plans，分成「全域」與「非全域（客戶可選）」兩組
+  const scopedPlans = aiPlans.filter(p => p.region === region && p.env === env);
+  const globalRows = scopedPlans.filter(p => globalPlans.includes(p.id));
+  const specificRows = scopedPlans.filter(p => !globalPlans.includes(p.id));
 
-  function addBinding() {
-    // 新增綁定預設為「專屬」方案 — 挑第一個非 global 的 plan，realm 用第一個非 TUTK 的選項
-    const firstNonGlobalPlan = aiPlans.find(p => !globalPlans.includes(p.id)) || aiPlans[0];
-    const firstNonGlobalRealm = REALM_OPTIONS.find(r => r !== GLOBAL_REALM) || REALM_OPTIONS[0];
-    const newBinding = {
-      id: "cb-" + Date.now(),
-      realm: firstNonGlobalRealm,
-      env: ENV_OPTIONS[0],
-      planId: firstNonGlobalPlan?.id || "",
-    };
-    update([...explicit, newBinding]);
-  }
-
-  function materializeVirtual(virtualRow, patch) {
-    const newBinding = {
-      id: "cb-" + Date.now(),
-      realm: virtualRow.realm,
-      env: virtualRow.env,
-      planId: virtualRow.planId,
-      ...patch,
-    };
-    update([...explicit, newBinding]);
-  }
-
-  function updateRow(row, patch) {
-    // 切換到 global plan 時，realm 強制為 TUTK
-    const finalPatch = { ...patch };
-    if (patch.planId && globalPlans.includes(patch.planId)) {
-      finalPatch.realm = GLOBAL_REALM;
-    }
-    if (row._virtual) {
-      materializeVirtual(row, finalPatch);
-    } else {
-      update(explicit.map(b => b.id === row.id ? { ...b, ...finalPatch } : b));
-    }
-  }
-
-  function removeRow(row) {
-    if (row._virtual) return; // 虛擬全域列不可從客戶頁刪除
-    update(explicit.filter(b => b.id !== row.id));
-  }
-
-  function planLabel(plan) {
-    return plan.name;
-  }
-
-  function isGlobal(planId) {
-    return globalPlans.includes(planId);
+  function toggleSpecific(planId, checked) {
+    setCustomerCloudAi(prev => {
+      const current = prev[customer.id]?.selectedSpecificPlanIds || [];
+      const next = checked
+        ? (current.includes(planId) ? current : [...current, planId])
+        : current.filter(id => id !== planId);
+      return {
+        ...prev,
+        [customer.id]: { ...(prev[customer.id] || {}), selectedSpecificPlanIds: next },
+      };
+    });
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-kdc-table font-medium text-kdc-primary m-0">Cloud AI 加值服務</h3>
           <p className="text-[12px] text-[#999] mt-1">
-            列表自動帶入全域方案（綠 chip），可額外綁定客戶專屬方案（橘 chip）。同一 realm/env 可綁多個方案；
-            全域方案要從這裡完全移除，請至「Cloud AI 設定 → 全域方案」tab 操作。
+            列出該 (地區, 環境) 下所有 AI Plan。全域方案（綠 chip）自動套用且不可取消；專屬方案（橘 chip）由 PM 自行勾選。
+            全域方案的管理請至「Cloud AI 設定 → 全域方案」tab。
           </p>
         </div>
-        <button
-          className="bg-kdc-primary-alt text-white rounded-btn px-3.5 py-1.5 text-sm cursor-pointer hover:opacity-85 inline-flex items-center gap-1.5"
-          onClick={addBinding}
-        >
-          <IconPlus /> 新增綁定
-        </button>
+        <RegionEnvSelector
+          region={region}
+          env={env}
+          onRegionChange={setRegion}
+          onEnvChange={setEnv}
+        />
       </div>
 
       <table className="w-full border-collapse text-kdc-table">
         <thead>
           <tr>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[110px]">來源</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[180px]">Realm</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[140px]">Env</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">AI Plan</th>
-            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[80px]">功能</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[60px]">啟用</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[90px]">來源</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">方案名稱</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">說明</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[100px]">Daily Cap</th>
           </tr>
         </thead>
         <tbody>
-          {allRows.length === 0 ? (
+          {scopedPlans.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-3 py-10 text-center text-[14px] text-[#999]">
-                尚未綁定任何 AI Plan — 點右上「+ 新增綁定」加入第一筆
+                此 ({region} / {env}) 下尚無 AI Plan — 請至「Cloud AI 設定」於此 scope 建立方案
               </td>
             </tr>
-          ) : allRows.map(b => {
-            const global = isGlobal(b.planId);
-            return (
-              <tr key={b.id} className="border-b border-kdc-border">
-                <td className="px-3 py-2">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium ${
-                      global
-                        ? 'bg-[#e8f5e9] text-[#2e7d32]'
-                        : 'bg-[#fff3e0] text-[#e65100]'
-                    }`}
-                    title={global ? "來自 Cloud AI 設定 → 全域方案" : "客戶專屬方案"}
-                  >
-                    {global ? "全域" : "專屬"}
-                  </span>
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    className={`h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc outline-none w-full focus:border-kdc-primary ${
-                      global ? 'bg-[#f5f5f5] text-[#666] cursor-not-allowed' : 'bg-white cursor-pointer'
-                    }`}
-                    value={global ? GLOBAL_REALM : b.realm}
-                    onChange={e => updateRow(b, { realm: e.target.value })}
-                    disabled={global}
-                    title={global ? "全域方案 realm 固定為 TUTK，不可修改" : ""}
-                  >
-                    {global ? (
-                      <option value={GLOBAL_REALM}>{GLOBAL_REALM}</option>
-                    ) : (
-                      REALM_OPTIONS.filter(r => r !== GLOBAL_REALM).map(r => <option key={r} value={r}>{r}</option>)
-                    )}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                    value={b.env}
-                    onChange={e => updateRow(b, { env: e.target.value })}
-                  >
-                    {ENV_OPTIONS.map(env => <option key={env} value={env}>{env}</option>)}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    className="h-9 border border-kdc-border rounded-[5px] px-2 text-kdc-table font-kdc bg-white outline-none cursor-pointer w-full focus:border-kdc-primary"
-                    value={b.planId}
-                    onChange={e => updateRow(b, { planId: e.target.value })}
-                  >
-                    {aiPlans.map(p => (
-                      <option key={p.id} value={p.id}>{planLabel(p)}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <button
-                    className={`bg-transparent border-none p-1 rounded flex items-center ${
-                      b._virtual
-                        ? 'opacity-25 cursor-not-allowed text-kdc-text'
-                        : 'cursor-pointer text-kdc-text hover:bg-[#e0e7ee]'
-                    }`}
-                    title={b._virtual ? "全域方案不可從客戶頁刪除（請到 Cloud AI 設定 → 全域方案 tab 移除）" : "移除綁定"}
-                    onClick={() => removeRow(b)}
-                    disabled={b._virtual}
-                  >
-                    <IconTrash />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          ) : (
+            <>
+              {globalRows.map(p => (
+                <tr key={p.id} className="border-b border-kdc-border bg-[#f9fdf9]">
+                  <td className="px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked
+                      disabled
+                      className="w-[18px] h-[18px] cursor-not-allowed"
+                      title="全域方案：所有客戶自動套用，無法在客戶頁取消"
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
+                      全域
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 font-medium">{p.name}</td>
+                  <td className="px-3 py-2 text-kdc-body">{p.description}</td>
+                  <td className="px-3 py-2">{p.dailyCap === null ? "∞" : p.dailyCap}</td>
+                </tr>
+              ))}
+              {specificRows.map(p => {
+                const checked = selectedSpecific.includes(p.id);
+                return (
+                  <tr key={p.id} className="border-b border-kdc-border">
+                    <td className="px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => toggleSpecific(p.id, e.target.checked)}
+                        className="w-[18px] h-[18px] cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium bg-[#fff3e0] text-[#e65100]">
+                        專屬
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 font-medium">{p.name}</td>
+                    <td className="px-3 py-2 text-kdc-body">{p.description}</td>
+                    <td className="px-3 py-2">{p.dailyCap === null ? "∞" : p.dailyCap}</td>
+                  </tr>
+                );
+              })}
+            </>
+          )}
         </tbody>
       </table>
     </div>

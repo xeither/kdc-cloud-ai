@@ -3,15 +3,30 @@ import VlmProfilesTab from './VlmProfilesTab';
 import PromptsTab from './PromptsTab';
 import AiPlansTab from './AiPlansTab';
 import VendorAiSettingsTab from './VendorAiSettingsTab';
+import RegionEnvSelector from '../../components/RegionEnvSelector';
 
 const tabs = ["VLM Profiles", "Prompts", "AI Plans", "全域方案"];
 
 export default function CloudAiSettings() {
   const [activeTab, setActiveTab] = useState(0);
+  // 4 個 tab 共用同一組 (region, env) — 切換時所有 tab 一起隔離
+  const [region, setRegion] = useState("亞洲");
+  const [env, setEnv] = useState("Prod");
 
   return (
     <div>
-      <h2 className="text-kdc-title font-medium text-kdc-primary mb-5">Cloud AI 設定</h2>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-kdc-title font-medium text-kdc-primary m-0">Cloud AI 設定</h2>
+        <RegionEnvSelector
+          region={region}
+          env={env}
+          onRegionChange={setRegion}
+          onEnvChange={setEnv}
+        />
+      </div>
+      <p className="text-[12px] text-[#999] mb-3 -mt-3">
+        每個 (地區, 環境) 對應獨立的 server，VLM Profiles / Prompts / AI Plans / 全域方案 各自獨立。
+      </p>
       <ul className="flex flex-wrap pl-[5px] m-0" role="tablist">
         {tabs.map((t, i) => (
           <li
@@ -30,10 +45,10 @@ export default function CloudAiSettings() {
         ))}
       </ul>
       <div className="bg-[#fafafa] rounded-[10px] p-[10px] min-h-[400px]">
-        {activeTab === 0 && <VlmProfilesTab />}
-        {activeTab === 1 && <PromptsTab />}
-        {activeTab === 2 && <AiPlansTab />}
-        {activeTab === 3 && <VendorAiSettingsTab />}
+        {activeTab === 0 && <VlmProfilesTab region={region} env={env} />}
+        {activeTab === 1 && <PromptsTab region={region} env={env} />}
+        {activeTab === 2 && <AiPlansTab region={region} env={env} />}
+        {activeTab === 3 && <VendorAiSettingsTab region={region} env={env} />}
       </div>
     </div>
   );

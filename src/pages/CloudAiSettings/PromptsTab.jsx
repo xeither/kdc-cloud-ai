@@ -20,7 +20,7 @@ function validateJson(text) {
   }
 }
 
-export default function PromptsTab() {
+export default function PromptsTab({ region, env }) {
   const { prompts, setPrompts } = useCloudAi();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -28,6 +28,9 @@ export default function PromptsTab() {
   const [tagInput, setTagInput] = useState("");
   const [dupName, setDupName] = useState(null);
   const [bodyError, setBodyError] = useState(null);
+
+  // 只顯示當前 (region, env) 下的 prompts；名稱重複檢查也只比同 scope
+  const scopedPrompts = prompts.filter(p => p.region === region && p.env === env);
 
   function openNew() {
     setForm({ ...EMPTY_FORM, tags: [] });
@@ -51,7 +54,7 @@ export default function PromptsTab() {
   }
 
   function uniqueCopyName(base) {
-    const existing = new Set(prompts.map(p => p.name));
+    const existing = new Set(scopedPrompts.map(p => p.name));
     let candidate = `${base} (副本)`;
     let n = 2;
     while (existing.has(candidate)) {
@@ -62,13 +65,14 @@ export default function PromptsTab() {
   }
 
   function doCopy(p) {
+    // 複製出來的 prompt 留在原本 scope（同 region/env）
     const copy = { ...p, id: "p-" + Date.now(), name: uniqueCopyName(p.name), updatedAt: today, tags: [...p.tags] };
     setPrompts(prev => [...prev, copy]);
   }
 
   function isDuplicateName(name) {
     const trimmed = name.trim();
-    return prompts.some(p => p.name === trimmed && p.id !== form.id);
+    return scopedPrompts.some(p => p.name === trimmed && p.id !== form.id);
   }
 
   function addTag(e) {
@@ -94,7 +98,8 @@ export default function PromptsTab() {
       return;
     }
     if (editing === "new") {
-      setPrompts(prev => [...prev, { ...form, name: trimmed, id: "p-" + Date.now(), updatedAt: today }]);
+      // 新建 prompt 自動歸屬當前 (region, env)
+      setPrompts(prev => [...prev, { ...form, name: trimmed, id: "p-" + Date.now(), updatedAt: today, region, env }]);
     } else {
       setPrompts(prev => prev.map(p => p.id === form.id ? { ...p, ...form, name: trimmed, updatedAt: today } : p));
     }
@@ -106,7 +111,7 @@ export default function PromptsTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-kdc-body text-kdc-text">共 {prompts.length} 筆</span>
+        <span className="text-kdc-body text-kdc-text">共 {scopedPrompts.length} 筆（{region} / {env}）</span>
         <button className="bg-kdc-primary-alt text-white rounded-btn px-3.5 py-1.5 text-sm border border-kdc-border cursor-pointer inline-flex items-center gap-1.5 hover:opacity-85" onClick={openNew}>
           <IconPlus /> 新增 Prompt
         </button>
@@ -122,7 +127,7 @@ export default function PromptsTab() {
           </tr>
         </thead>
         <tbody>
-          {prompts.map((p, i) => (
+          {scopedPrompts.map((p, i) => (
             <tr key={p.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
               <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{p.name}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border text-kdc-body">{p.description}</td>
@@ -157,7 +162,7 @@ export default function PromptsTab() {
         </tbody>
       </table>
 
-      <Pagination total={prompts.length} />
+      <Pagination total={scopedPrompts.length} />
 
       {editing && (
         <Modal

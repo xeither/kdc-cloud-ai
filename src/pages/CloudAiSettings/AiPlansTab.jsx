@@ -14,12 +14,17 @@ const EMPTY_FORM = {
   prompts: [],          // Prompt IDs (ordered; prompts[0] 即為預設)
 };
 
-export default function AiPlansTab() {
+export default function AiPlansTab({ region, env }) {
   const { aiPlans, setAiPlans, vlmProfiles, prompts, globalPlans, customers, customerCloudAi } = useCloudAi();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
   const [blockedDelete, setBlockedDelete] = useState(null);
+
+  // 當前 (region, env) 下可用的 plans / profiles / prompts
+  const scopedPlans = aiPlans.filter(p => p.region === region && p.env === env);
+  const scopedProfiles = vlmProfiles.filter(p => p.region === region && p.env === env);
+  const scopedPrompts = prompts.filter(p => p.region === region && p.env === env);
 
   function profileName(id) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
@@ -37,18 +42,21 @@ export default function AiPlansTab() {
   }
 
   function usedByCustomerCount(planId) {
+    // 全域方案：所有客戶都套用
     if (globalPlans.includes(planId)) return customers.length;
+    // 專屬方案：看 customerCloudAi[*].selectedSpecificPlanIds 包含此 planId 的客戶數
     return customers.filter(c => {
-      const bindings = customerCloudAi[c.id]?.bindings || [];
-      return bindings.some(b => b.planId === planId);
+      const ids = customerCloudAi[c.id]?.selectedSpecificPlanIds || [];
+      return ids.includes(planId);
     }).length;
   }
 
   function openNew() {
-    const defaultPrompt = prompts.find(p => p.name === "中文場景描述");
+    // 預設挑當前 scope 下的第一個 VLM Profile + 該 scope 下名稱類似「中文場景描述」的 prompt（無則挑第一個）
+    const defaultPrompt = scopedPrompts.find(p => p.name.startsWith("中文場景描述")) || scopedPrompts[0];
     setForm({
       ...EMPTY_FORM,
-      vlmProfileId: vlmProfiles[0]?.id || "",
+      vlmProfileId: scopedProfiles[0]?.id || "",
       prompts: defaultPrompt ? [defaultPrompt.id] : [],
     });
     setEditing("new");
@@ -107,7 +115,8 @@ export default function AiPlansTab() {
       prompts: form.prompts,
     };
     if (editing === "new") {
-      setAiPlans(prev => [...prev, { id: "plan-" + Date.now(), ...payload }]);
+      // 新建 plan 自動歸屬當前 (region, env)
+      setAiPlans(prev => [...prev, { id: "plan-" + Date.now(), ...payload, region, env }]);
     } else {
       setAiPlans(prev => prev.map(p => p.id === form.id ? { ...p, ...payload } : p));
     }
@@ -124,17 +133,18 @@ export default function AiPlansTab() {
 
   const isFormValid = form.name.trim() && form.prompts.length > 0;
 
-  // Modal 內 prompt 排序：先呈現已勾選（依方案內順序），再列未勾選（依 Prompt tab 順序）
+  // Modal 內 prompt 排序：先呈現已勾選（依方案內順序），再列未勾選（依 Prompt tab 順序）。
+  // 只列出當前 (region, env) 下的 prompts — AI Plan 不能跨 scope 引用。
   const selectedSet = new Set(form.prompts);
   const orderedPromptsForModal = [
     ...form.prompts.map(id => getPrompt(id)).filter(Boolean),
-    ...prompts.filter(p => !selectedSet.has(p.id)),
+    ...scopedPrompts.filter(p => !selectedSet.has(p.id)),
   ];
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-kdc-body text-kdc-text">共 {aiPlans.length} 筆</span>
+        <span className="text-kdc-body text-kdc-text">共 {scopedPlans.length} 筆（{region} / {env}）</span>
         <button
           className="bg-kdc-primary-alt text-white rounded-btn px-3.5 py-1.5 text-sm border border-kdc-border cursor-pointer inline-flex items-center gap-1.5 hover:opacity-85"
           onClick={openNew}
@@ -156,7 +166,7 @@ export default function AiPlansTab() {
           </tr>
         </thead>
         <tbody>
-          {aiPlans.map((plan, i) => {
+          {scopedPlans.map((plan, i) => {
             const defaultId = plan.prompts?.[0];
             return (
               <tr key={plan.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
@@ -216,7 +226,7 @@ export default function AiPlansTab() {
         </tbody>
       </table>
 
-      <Pagination total={aiPlans.length} />
+      <Pagination total={scopedPlans.length} />
 
       {editing && (
         <Modal
@@ -259,7 +269,7 @@ export default function AiPlansTab() {
               value={form.vlmProfileId}
               onChange={e => setForm(f => ({ ...f, vlmProfileId: e.target.value }))}
             >
-              {vlmProfiles.map(p => (
+              {scopedProfiles.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
@@ -285,9 +295,9 @@ export default function AiPlansTab() {
               <span className="text-[#999] text-xs font-normal ml-1">（勾選此方案使用的 Prompt；第一個為預設，可用 ↑↓ 調整順序。Prompt 內容請至「Prompts」分頁編輯）</span>
             </label>
             <div className="border border-kdc-border rounded-[5px] max-h-[300px] overflow-y-auto bg-white">
-              {prompts.length === 0 ? (
+              {scopedPrompts.length === 0 ? (
                 <div className="px-3 py-6 text-center text-[#999] text-[13px]">
-                  尚無 Prompt — 請先到「Prompts」分頁建立
+                  此 ({region} / {env}) 尚無 Prompt — 請先到「Prompts」分頁切到同 scope 建立
                 </div>
               ) : (
                 orderedPromptsForModal.map(p => {

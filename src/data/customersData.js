@@ -235,26 +235,19 @@ export const SYSTEM_FEATURE_LIST = [
   { key: "rich", label: "Rich" },
 ];
 
-// Cloud AI 加值服務（per-customer）— Phase 2 新增。
-// realm 選項：「TUTK」為全域 realm（全域方案虛擬列預設值）；其餘為 mock vendor 名稱。
-// env 選項：Prod / STG / RD
-export const REALM_OPTIONS = ["TUTK", "Wyze Labs", "SKT", "徠福科技"];
-export const ENV_OPTIONS = ["Prod", "STG", "RD"];
-export const GLOBAL_REALM = "TUTK"; // 虛擬全域列寫死的 realm
+// Cloud AI 加值服務 — 以 (region, env) 為單位過濾方案清單。
+// 每個 plan id 自帶 region/env，因此 customer 端只需記錄「勾選了哪些非全域 plan」即可（selectedSpecificPlanIds）。
+// 全域方案（globalPlans）在客戶頁面自動套用且不可取消（Q1=a）。
+export const REGION_OPTIONS = ["美洲", "中國", "亞洲", "歐洲"];
+export const ENV_OPTIONS = ["Prod", "STG"];
 
-// 每筆 binding：{ id, realm, env, planId }
-// PM 可在客戶頁新增多筆，同 (realm, env) 可重複（代表該環境綁多個方案）
+// 每位客戶綁定的「專屬」AI plan ID 清單（全域方案自動套用，不在此記錄）。
+// V-1234 範例：在 亞洲/Prod 勾了 plan-2 (熊出沒偵測)，在 亞洲/STG 勾了 plan-10 (熊出沒偵測_亞洲/STG)。
 export const INITIAL_CUSTOMER_CLOUD_AI = {
   "V-1234": {
-    bindings: [
-      { id: "cb-1", realm: "Wyze Labs", env: "Prod", planId: "plan-2" },
-      { id: "cb-2", realm: "Wyze Labs", env: "STG",  planId: "plan-2" },
-      { id: "cb-3", realm: "TUTK", env: "Prod", planId: "plan-1" },
-    ],
+    selectedSpecificPlanIds: ["plan-2", "plan-10"],
   },
   "V-5678": {
-    bindings: [
-      { id: "cb-4", realm: "SKT", env: "Prod", planId: "plan-1" },
-    ],
+    selectedSpecificPlanIds: [],
   },
 };

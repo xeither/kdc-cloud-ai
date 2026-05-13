@@ -21,9 +21,16 @@ export default function VsaasApplicationForm() {
   });
 
   const u = (key, val) => setF(prev => ({ ...prev, [key]: val }));
+  // region 與 serviceType 影響 AI Plan scope，變動時清空已選的 AI Plan
   const toggleRegion = (r) => {
-    const cur = f.region;
-    u("region", cur.includes(r) ? cur.filter(x => x !== r) : [...cur, r]);
+    setF(prev => {
+      const cur = prev.region;
+      const next = cur.includes(r) ? cur.filter(x => x !== r) : [...cur, r];
+      return { ...prev, region: next, cloudAiPlan: "" };
+    });
+  };
+  const setServiceType = (val) => {
+    setF(prev => ({ ...prev, serviceType: val, cloudAiPlan: "" }));
   };
   const planName = (id) => aiPlans.find(p => p.id === id)?.name || id;
 
@@ -61,34 +68,26 @@ export default function VsaasApplicationForm() {
     setShowSuggestions(false);
   };
 
-  // AI Plan 選項 = 客戶 Cloud AI tab 的完整綁定（合併虛擬全域列 + 客戶專屬 bindings）
-  // 每個選項一筆 (planId, realm, env) 三元組，UI 顯示為「方案/realm/env」
-  const explicit = customerCloudAi[selectedCustomerId]?.bindings || [];
-  const explicitPlanIds = new Set(explicit.map(b => b.planId));
-  const virtualGlobalRows = selectedCustomerId
-    ? globalPlans
-        .filter(pid => !explicitPlanIds.has(pid))
-        .map(pid => ({ planId: pid, realm: "TUTK", env: "Prod", _global: true }))
+  // v1.19：AI Plan 選項依 (customer, region, env) 計算
+  //   - region 取自申請單「地區」欄位（Cloud AI 啟用時限制單選）
+  //   - env 由「服務啟用性質」決定：測試→STG / 正式→Prod
+  //   - 該客戶在此 (region, env) scope 下啟用的 plans = 全域 + selectedSpecificPlanIds
+  const derivedEnv = f.serviceType === "formal" ? "Prod" : "STG";
+  const derivedRegion = f.region.length === 1 ? f.region[0] : null;
+  const aiPlanGuard = (() => {
+    if (!f.cloudAiEnabled) return null;
+    if (!selectedCustomerId) return "請先選擇客戶";
+    if (f.region.length === 0) return "請先勾選地區";
+    if (f.region.length > 1) return "Cloud AI 啟用時，地區只能單選（每個 region 對應獨立 server）";
+    return null;
+  })();
+  const selectedSpecific = customerCloudAi[selectedCustomerId]?.selectedSpecificPlanIds || [];
+  const aiPlanOptions = derivedRegion && selectedCustomerId
+    ? aiPlans.filter(p => {
+        if (p.region !== derivedRegion || p.env !== derivedEnv) return false;
+        return globalPlans.includes(p.id) || selectedSpecific.includes(p.id);
+      }).map(p => ({ planId: p.id, _global: globalPlans.includes(p.id) }))
     : [];
-  const allBindingOptions = selectedCustomerId
-    ? [
-        ...virtualGlobalRows,
-        ...explicit.map(b => {
-          const isGlobalPlan = globalPlans.includes(b.planId);
-          // 全域方案 realm 寫死為 TUTK，忽略 binding 中的 realm 值
-          return { planId: b.planId, realm: isGlobalPlan ? "TUTK" : b.realm, env: b.env, _global: isGlobalPlan };
-        }),
-      ]
-    : [];
-  // 同一 (planId, realm, env) 重複時去重
-  const seen = new Set();
-  const dedupedOptions = allBindingOptions.filter(o => {
-    const k = `${o.planId}|${o.realm}|${o.env}`;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
-  const optionValue = (o) => `${o.planId}|${o.realm}|${o.env}`;
 
   const labelCls = "bg-kdc-form-label px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
   const labelDarkCls = "bg-kdc-form-label-dark px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap";
@@ -151,8 +150,8 @@ export default function VsaasApplicationForm() {
         <div className="flex border-b border-kdc-border">
           <div className={labelCls}><span className="text-kdc-required mr-0.5">*</span>服務啟用性質 :</div>
           <div className={`${valCls} flex-1`}>
-            <label className="flex items-center gap-1"><input type="radio" name="serviceType" checked={f.serviceType === "test"} onChange={() => u("serviceType", "test")} /> 測試</label>
-            <label className="flex items-center gap-1"><input type="radio" name="serviceType" checked={f.serviceType === "formal"} onChange={() => u("serviceType", "formal")} /> 正式</label>
+            <label className="flex items-center gap-1"><input type="radio" name="serviceType" checked={f.serviceType === "test"} onChange={() => setServiceType("test")} /> 測試</label>
+            <label className="flex items-center gap-1"><input type="radio" name="serviceType" checked={f.serviceType === "formal"} onChange={() => setServiceType("formal")} /> 正式</label>
             {f.serviceType === "formal" && <span className="flex items-center gap-1">(PI/PO no. <input className={`${inputCls} w-[140px]`} value={f.piPoNo} onChange={e => u("piPoNo", e.target.value)} /> )</span>}
           </div>
           <div className={labelCls}><span className="text-kdc-required mr-0.5">*</span>地區 :</div>
@@ -256,22 +255,27 @@ export default function VsaasApplicationForm() {
           <div className="flex">
             <div className="bg-[#e3f0fd] px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap"><span className="text-kdc-required mr-0.5">*</span>AI Plan :</div>
             <div className={valCls}>
-              <select className={`${selectCls} w-[420px]`} value={f.cloudAiPlan} onChange={e => u("cloudAiPlan", e.target.value)} disabled={!selectedCustomerId}>
-                <option value="">{selectedCustomerId ? "— 請選擇 AI Plan —" : "— 請先選擇客戶 —"}</option>
-                {dedupedOptions.map(o => (
-                  <option key={optionValue(o)} value={optionValue(o)}>
-                    {o._global ? "[共用]" : "[專屬]"} {planName(o.planId)} / {o.realm} / {o.env}
+              <select
+                className={`${selectCls} w-[420px]`}
+                value={f.cloudAiPlan}
+                onChange={e => u("cloudAiPlan", e.target.value)}
+                disabled={!!aiPlanGuard}
+              >
+                <option value="">{aiPlanGuard ? `— ${aiPlanGuard} —` : "— 請選擇 AI Plan —"}</option>
+                {aiPlanOptions.map(o => (
+                  <option key={o.planId} value={o.planId}>
+                    {o._global ? "[共用]" : "[專屬]"} {planName(o.planId)}
                   </option>
                 ))}
               </select>
-              {f.cloudAiPlan && (() => {
-                const [pid, realm, env] = f.cloudAiPlan.split("|");
-                return (
-                  <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">
-                    {planName(pid)} / {realm} / {env}
-                  </span>
-                );
-              })()}
+              {derivedRegion && !aiPlanGuard && (
+                <span className="text-[12px] text-[#666] ml-2">scope：{derivedRegion} / {derivedEnv}</span>
+              )}
+              {f.cloudAiPlan && (
+                <span className="inline-block px-2.5 py-0.5 rounded-xl text-[13px] font-medium bg-[#e8f5e9] text-[#2e7d32] ml-2">
+                  {planName(f.cloudAiPlan)} / {derivedRegion} / {derivedEnv}
+                </span>
+              )}
             </div>
           </div>
         )}

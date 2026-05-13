@@ -9,11 +9,14 @@ const PROVIDERS = ["Gemini", "Qwen", "OpenAI", "Claude", "其他"];
 
 const EMPTY_FORM = { name: "", provider: "Gemini", modelVersion: "", description: "" };
 
-export default function VlmProfilesTab() {
+export default function VlmProfilesTab({ region, env }) {
   const { vlmProfiles, setVlmProfiles } = useCloudAi();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
+
+  // 只顯示當前 (region, env) 下的 profiles
+  const scopedProfiles = vlmProfiles.filter(p => p.region === region && p.env === env);
 
   function openNew() {
     setForm({ ...EMPTY_FORM });
@@ -33,7 +36,8 @@ export default function VlmProfilesTab() {
   function save() {
     if (!form.name.trim() || !form.modelVersion.trim()) return;
     if (editing === "new") {
-      setVlmProfiles(prev => [...prev, { ...form, id: "vlm-" + Date.now(), refCount: 0 }]);
+      // 新建 profile 自動歸屬當前 (region, env)
+      setVlmProfiles(prev => [...prev, { ...form, id: "vlm-" + Date.now(), refCount: 0, region, env }]);
     } else {
       setVlmProfiles(prev => prev.map(p => p.id === form.id ? { ...p, ...form } : p));
     }
@@ -55,7 +59,7 @@ export default function VlmProfilesTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-kdc-body text-kdc-text">共 {vlmProfiles.length} 筆</span>
+        <span className="text-kdc-body text-kdc-text">共 {scopedProfiles.length} 筆（{region} / {env}）</span>
         <button className="bg-kdc-primary-alt text-white rounded-btn px-3.5 py-1.5 text-sm border border-kdc-border cursor-pointer inline-flex items-center gap-1.5 hover:opacity-85" onClick={openNew}>
           <IconPlus /> 新增 VLM Profile
         </button>
@@ -73,7 +77,7 @@ export default function VlmProfilesTab() {
           </tr>
         </thead>
         <tbody>
-          {vlmProfiles.map((p, i) => (
+          {scopedProfiles.map((p, i) => (
             <tr key={p.id} className={`hover:bg-[#e8f0f8] ${i % 2 === 1 ? 'bg-kdc-table-row-alt' : ''}`}>
               <td className="px-3 py-2.5 border-b border-kdc-border font-medium">{p.name}</td>
               <td className="px-3 py-2.5 border-b border-kdc-border">
@@ -110,7 +114,7 @@ export default function VlmProfilesTab() {
         </tbody>
       </table>
 
-      <Pagination total={vlmProfiles.length} />
+      <Pagination total={scopedProfiles.length} />
 
       {editing && (
         <Modal

@@ -4,7 +4,8 @@ import { IconPlus, IconClose } from '../../icons';
 import Modal from '../../components/Modal';
 
 // v1.16 起本 tab 僅管理「共用區」全域方案；Vendor 專屬區已搬到客戶資訊頁面 Cloud AI tab（D-035）
-export default function VendorAiSettingsTab() {
+// v1.19：(region, env) scope 化 — 每個 (region, env) 各自獨立的全域方案清單。
+export default function VendorAiSettingsTab({ region, env }) {
   const { aiPlans, globalPlans, setGlobalPlans, vlmProfiles } = useCloudAi();
   const [showPicker, setShowPicker] = useState(false);
 
@@ -12,7 +13,15 @@ export default function VendorAiSettingsTab() {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
   }
 
-  const availablePlans = aiPlans.filter(p => !globalPlans.includes(p.id));
+  // 當前 (region, env) 下：已成為全域的 plan ids
+  const scopedGlobalPlanIds = globalPlans.filter(pid => {
+    const p = aiPlans.find(ap => ap.id === pid);
+    return p && p.region === region && p.env === env;
+  });
+  // 當前 scope 下、尚未被加入全域的 plans（可被加入）
+  const availablePlans = aiPlans.filter(
+    p => p.region === region && p.env === env && !globalPlans.includes(p.id)
+  );
 
   function addGlobalPlan(planId) {
     setGlobalPlans(prev => [...prev, planId]);
@@ -27,10 +36,10 @@ export default function VendorAiSettingsTab() {
     <div>
       <h3 className="text-kdc-table font-medium text-kdc-primary mb-1 flex items-center gap-2">
         <span className="w-1 h-5 bg-kdc-primary rounded-sm inline-block" />
-        共用區 — 全域預設方案
+        共用區 — 全域預設方案（{region} / {env}）
       </h3>
       <p className="text-[12px] text-[#999] mb-3">
-        所有客戶預設可用的 AI Plan 清單。客戶個別的專屬方案請至「客戶資訊」頁面該客戶的「Cloud AI」tab 設定。
+        所有客戶在此 ({region} / {env}) scope 下預設可用的 AI Plan 清單。客戶個別的專屬方案請至「客戶資訊」頁面該客戶的「Cloud AI」tab 設定。
       </p>
 
       <table className="w-full border-collapse text-kdc-table mb-3">
@@ -43,7 +52,7 @@ export default function VendorAiSettingsTab() {
           </tr>
         </thead>
         <tbody>
-          {globalPlans.map((planId, i) => {
+          {scopedGlobalPlanIds.map((planId, i) => {
             const plan = aiPlans.find(p => p.id === planId);
             if (!plan) return null;
             return (
@@ -69,9 +78,11 @@ export default function VendorAiSettingsTab() {
               </tr>
             );
           })}
-          {globalPlans.length === 0 && (
+          {scopedGlobalPlanIds.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-3 py-6 text-center text-kdc-body text-[#999]">尚無全域方案</td>
+              <td colSpan={4} className="px-3 py-6 text-center text-kdc-body text-[#999]">
+                此 ({region} / {env}) 尚無全域方案 — 點下方「加入方案」從本 scope 的 AI Plans 挑一個加入
+              </td>
             </tr>
           )}
         </tbody>
@@ -90,7 +101,7 @@ export default function VendorAiSettingsTab() {
           onClose={() => setShowPicker(false)}
         >
           {availablePlans.length === 0 ? (
-            <p className="text-kdc-body text-[#999] text-center py-6">所有方案已加入共用區</p>
+            <p className="text-kdc-body text-[#999] text-center py-6">此 ({region} / {env}) 所有方案已加入共用區，或此 scope 下尚無 AI Plan</p>
           ) : (
             <div className="flex flex-col gap-2">
               {availablePlans.map(plan => (
