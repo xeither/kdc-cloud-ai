@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCloudAi } from '../../context/CloudAiContext';
+import { useP2pTrace } from '../../context/P2pTraceContext';
+import { DAILY_STORAGE_ESTIMATE_PER_VPG } from '../../data/vpgData';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import Toggle from '../../components/Toggle';
 import { IconTrash, IconPlus } from '../../icons';
 import {
   CUSTOMER_ATTRIBUTES, STATUS_OPTIONS, IMPORTANCE_OPTIONS,
@@ -8,11 +12,11 @@ import {
   SYSTEM_FEATURE_LIST, REALM_OPTIONS, ENV_OPTIONS, GLOBAL_REALM,
 } from '../../data/customersData';
 
-// Tab 順序對齊 KDC Internal，最後一個「Cloud AI」為本模組新增（v1.15）
+// Tab 順序對齊 KDC Internal。最後兩個（Cloud AI / P2P Insight）為本 POC 新增模組。
 const TABS = [
   "聯絡資料", "報價資訊", "申請表", "系統功能", "帳號資訊",
   "產品歷程", "服務歷程", "服務概況", "財務資料", "待辦事項",
-  "Cloud AI",
+  "Cloud AI", "P2P Insight",
 ];
 
 export default function CustomerDetail() {
@@ -129,7 +133,7 @@ export default function CustomerDetail() {
                 ${activeTab === i
                   ? 'bg-white text-kdc-primary-alt z-10'
                   : 'bg-kdc-tab-unselected text-white'}
-                ${t === 'Cloud AI' && activeTab !== i ? 'bg-kdc-primary-alt' : ''}`}
+                ${(t === 'Cloud AI' || t === 'P2P Insight') && activeTab !== i ? 'bg-kdc-primary-alt' : ''}`}
               style={{ transform: 'skew(-20deg)' }}
               onClick={() => setActiveTab(i)}
             >
@@ -149,6 +153,7 @@ export default function CustomerDetail() {
           {activeTab === 8 && <PlaceholderTab name="財務資料" />}
           {activeTab === 9 && <PlaceholderTab name="待辦事項" />}
           {activeTab === 10 && <CloudAiTab customer={customer} />}
+          {activeTab === 11 && <P2pInsightTab customer={customer} />}
         </div>
       </div>
     </div>
@@ -306,6 +311,102 @@ function PlaceholderTab({ name }) {
     <div className="flex flex-col items-center justify-center py-12 text-[#999]">
       <p className="text-[14px] mb-1">{name}</p>
       <p className="text-[12px]">（Phase 1 placeholder — 既有 KDC 功能，本 prototype 暫不復刻內容）</p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// P2P Insight Trace 開通管理（per-customer）
+//   PM 為該客戶名下的 VPG 逐一開通 trace log 上傳；白名單機制。
+//   配對的 external POC：xeither/kdc-external-poc → P2P Insight Connection Trace
+// ─────────────────────────────────────────────────────────────────────────
+function P2pInsightTab({ customer }) {
+  const { getVpgsForCustomer, setVpgTrace } = useP2pTrace();
+  const vpgs = getVpgsForCustomer(customer.id);
+  const [pendingToggle, setPendingToggle] = useState(null); // { vpg, nextEnabled }
+
+  const enabledCount = vpgs.filter((v) => v.traceEnabled).length;
+
+  function requestToggle(vpg) {
+    setPendingToggle({ vpg, nextEnabled: !vpg.traceEnabled });
+  }
+
+  function confirmToggle() {
+    if (!pendingToggle) return;
+    setVpgTrace(customer.id, pendingToggle.vpg.id, pendingToggle.nextEnabled);
+    setPendingToggle(null);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-kdc-table font-medium text-kdc-primary m-0">P2P Insight — Trace 開通</h3>
+          <p className="text-[12px] text-[#999] mt-1">
+            為此客戶名下的 VPG 開通 P2P Server trace log 上傳，配合外網 KDC「P2P Insight → Connection Trace」頁面提供客戶自助排查。
+            白名單機制：請先確認該 VPG 對應的產品線已與 OP 完成後端 trace 服務開通，再於此處逐一開啟。
+          </p>
+        </div>
+        <div className="text-right text-[12px] text-[#999]">
+          <div>已開通 <span className="text-kdc-primary-alt font-medium text-kdc-body">{enabledCount}</span> / {vpgs.length} 個 VPG</div>
+          <div>預估每日新增儲存：每 VPG 約 {DAILY_STORAGE_ESTIMATE_PER_VPG}</div>
+        </div>
+      </div>
+
+      <table className="w-full border-collapse text-kdc-table">
+        <thead>
+          <tr>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[90px]">VPG ID</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border">產品線</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[140px]">Realm</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[80px]">Env</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[110px]">Trace 上傳</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[110px]">開通日期</th>
+            <th className="text-kdc-table-header font-medium text-left px-3 py-2.5 border-b-2 border-kdc-border w-[120px]">操作者</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vpgs.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="px-3 py-10 text-center text-[14px] text-[#999]">
+                此客戶尚未註冊任何 VPG — 請先於「申請單管理」完成產品申請流程，VPG 建立後將自動列出於此。
+              </td>
+            </tr>
+          ) : vpgs.map((vpg) => (
+            <tr key={vpg.id} className="border-b border-kdc-border">
+              <td className="px-3 py-2 font-mono text-[13px]">{vpg.id}</td>
+              <td className="px-3 py-2">{vpg.productLine}</td>
+              <td className="px-3 py-2 text-[#666]">{vpg.realm}</td>
+              <td className="px-3 py-2 text-[#666]">{vpg.env}</td>
+              <td className="px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Toggle checked={vpg.traceEnabled} onChange={() => requestToggle(vpg)} />
+                  <span className={`text-[12px] ${vpg.traceEnabled ? 'text-[#2e7d32]' : 'text-[#999]'}`}>
+                    {vpg.traceEnabled ? '已開通' : '未開通'}
+                  </span>
+                </div>
+              </td>
+              <td className="px-3 py-2 text-[#666] text-[13px]">{vpg.enabledAt || '—'}</td>
+              <td className="px-3 py-2 text-[#666] text-[13px]">{vpg.enabledBy || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {pendingToggle && (
+        <ConfirmDialog
+          title={pendingToggle.nextEnabled ? '開通 Trace 上傳' : '停止 Trace 上傳'}
+          message={
+            pendingToggle.nextEnabled
+              ? `為 VPG ${pendingToggle.vpg.id}（${pendingToggle.vpg.productLine}）開通 P2P Server trace log 上傳？\n\n開通後該 VPG 名下所有設備的 SDK 會持續上傳 OTel trace 至 Collector，預估每日新增 ${DAILY_STORAGE_ESTIMATE_PER_VPG} 儲存量。\n\n請確認此 VPG 已在白名單範圍內。`
+              : `停止 VPG ${pendingToggle.vpg.id}（${pendingToggle.vpg.productLine}）的 trace 上傳？\n\n停止後新連線不再產生 trace，外網 P2P Insight 將查不到後續紀錄。\n已上傳的歷史資料依後端 retention 政策保留 3 天後過期。`
+          }
+          confirmText={pendingToggle.nextEnabled ? '確認開通' : '確認停止'}
+          variant="warning"
+          onConfirm={confirmToggle}
+          onCancel={() => setPendingToggle(null)}
+        />
+      )}
     </div>
   );
 }

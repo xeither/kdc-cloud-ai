@@ -1,10 +1,25 @@
-# KDC Internal — Cloud AI 模組
+# KDC Internal POC — Multi-module Prototype
 
-Functional prototype + design handoff for TUTK's KDC Internal Cloud AI settings module. Maintained by Ronald Chen (PM).
+Functional prototype + design handoff for TUTK's KDC Internal tools. Maintained by Ronald Chen (PM).
+
+> **命名沿用**：folder / GitHub repo 名稱仍為 `kdc-cloud-ai`，但實際範疇已擴展為 KDC Internal 多模組 prototype。
+> Cloud AI 設定 為本 POC 起家的第一個模組，後續陸續加入其他 PM 後台功能。
+
+## 模組
+
+| 模組 | Route | 狀態 |
+|------|-------|-----|
+| Cloud AI 設定 | `/cloud-ai`（global templates）+ 客戶 detail → Cloud AI tab（per-customer 綁定） | ✓ |
+| 客戶資訊 | `/customers`, `/customers/:id` | ✓ |
+| 申請單管理 | `/applications`, `/applications/new`, `/applications/new/vsaas` | ✓ |
+| **P2P Insight Trace 開通** | 客戶 detail → **P2P Insight** tab | ✓ (2026-05-13 新增) |
+| Design System (dev only) | `/design-system` | ✓ |
 
 - **Live prototype**: https://kdc-cloud-ai-config.zeabur.app
-- **Functional SPEC**: HedgeDoc noteId `s0-kbgpQRkavK4jzlfJ51g`
+- **Functional SPEC (Cloud AI)**: HedgeDoc noteId `s0-kbgpQRkavK4jzlfJ51g`
+- **Functional SPEC (P2P Insight Trace 開通)**: 新 spec 在 [BACKLOG.md](#) 連結中
 - **Design file (Claude Design)**: see [`design/DELIVERABLES.md`](./design/DELIVERABLES.md)
+- **姊妹專案**: [`xeither/kdc-external-poc`](https://github.com/xeither/kdc-external-poc) — 客戶面的 KDC external（P2P Insight Connection Trace 查詢端）
 
 ## Stack
 
