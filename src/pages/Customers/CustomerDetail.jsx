@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCloudAi } from '../../context/CloudAiContext';
 import { useP2pTrace } from '../../context/P2pTraceContext';
-import { DAILY_STORAGE_ESTIMATE_PER_VPG } from '../../data/vpgData';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Toggle from '../../components/Toggle';
 import { IconTrash, IconPlus } from '../../icons';
@@ -349,7 +348,6 @@ function P2pInsightTab({ customer }) {
         </div>
         <div className="text-right text-[12px] text-[#999]">
           <div>已開通 <span className="text-kdc-primary-alt font-medium text-kdc-body">{enabledCount}</span> / {vpgs.length} 個 VPG</div>
-          <div>預估每日新增儲存：每 VPG 約 {DAILY_STORAGE_ESTIMATE_PER_VPG}</div>
         </div>
       </div>
 
@@ -398,7 +396,7 @@ function P2pInsightTab({ customer }) {
           title={pendingToggle.nextEnabled ? '開通 Trace 上傳' : '停止 Trace 上傳'}
           message={
             pendingToggle.nextEnabled
-              ? `為 VPG ${pendingToggle.vpg.id}（${pendingToggle.vpg.productLine}）開通 P2P Server trace log 上傳？\n\n開通後該 VPG 名下所有設備的 SDK 會持續上傳 OTel trace 至 Collector，預估每日新增 ${DAILY_STORAGE_ESTIMATE_PER_VPG} 儲存量。\n\n請確認此 VPG 已在白名單範圍內。`
+              ? `為 VPG ${pendingToggle.vpg.id}（${pendingToggle.vpg.productLine}）開通 P2P Server trace log 上傳？\n\n開通後該 VPG 名下所有設備的 SDK 會持續上傳 OTel trace 至 Collector。\n\n請確認此 VPG 已在白名單範圍內。`
               : `停止 VPG ${pendingToggle.vpg.id}（${pendingToggle.vpg.productLine}）的 trace 上傳？\n\n停止後新連線不再產生 trace，外網 P2P Insight 將查不到後續紀錄。\n已上傳的歷史資料依後端 retention 政策保留 3 天後過期。`
           }
           confirmText={pendingToggle.nextEnabled ? '確認開通' : '確認停止'}

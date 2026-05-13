@@ -5,7 +5,7 @@
 //   一個客戶名下可能有多組 VPG（依產品線拆分），每組 VPG 對應特定
 //   realm/env，PM 可逐 VPG 開通 trace。
 //
-// 白名單管控：trace 開通會增加後端儲存量，僅針對 Wyze 等試點客戶開放。
+// 白名單管控：trace 開通會增加後端負載，僅針對試點客戶開放。
 // 此 mock 假設 Wyze (V-1234) 已有一條開通紀錄供 demo。
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,3 @@ export const INITIAL_VPGS = {
     },
   ],
 };
-
-/** 估算每日 trace 上傳新增儲存量 — confirm dialog 用 */
-export const DAILY_STORAGE_ESTIMATE_PER_VPG = "150 ~ 500 MB";
