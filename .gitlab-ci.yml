@@ -1,0 +1,67 @@
+stages:
+  - build-image
+  - deploy
+
+variables:
+  IMAGE_NAME: registry3-tutk.kalay.us/pm-poc2/kdc-internal-poc
+
+build-image:
+  stage: build-image
+  tags:
+    - backend
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+      command: ['--tls=false']
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ''
+  when: manual
+  allow_failure: false
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin
+  script:
+    - |
+      set -euxo pipefail
+
+      SHORT_SHA=$(echo "$CI_COMMIT_SHA" | cut -c1-8)
+      echo "Building image: $IMAGE_NAME:$SHORT_SHA"
+
+      docker build --platform=linux/amd64 \
+        -t $IMAGE_NAME:$SHORT_SHA \
+        -t $IMAGE_NAME:latest .
+
+      docker push $IMAGE_NAME:$SHORT_SHA
+      docker push $IMAGE_NAME:latest
+
+deploy:
+  stage: deploy
+  tags:
+    - backend-shell
+  needs:
+    - build-image
+  before_script:
+    - mkdir -p ~/.ssh
+    - ssh-keyscan -H 192.168.3.10 >> ~/.ssh/known_hosts 2>/dev/null || true
+  script:
+    - |
+      echo "Pull and run on KVM..."
+      ssh gitlabrunner@192.168.3.10 bash -s "$DOCKER_USERNAME" "$DOCKER_PASSWORD" << 'ENDSSH'
+        set -e
+        DOCKER_USER="$1"
+        DOCKER_PASS="$2"
+
+        echo "$DOCKER_PASS" | docker login registry3-tutk.kalay.us -u "$DOCKER_USER" --password-stdin
+        docker pull registry3-tutk.kalay.us/pm-poc2/kdc-internal-poc:latest
+
+        docker stop kdc-internal-poc || true
+        docker rm kdc-internal-poc || true
+        docker run -d --name kdc-internal-poc --restart unless-stopped \
+          --network tutk \
+          registry3-tutk.kalay.us/pm-poc2/kdc-internal-poc:latest
+
+        docker image prune -f
+
+        echo "Deploy complete!"
+      ENDSSH
