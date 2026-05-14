@@ -21,7 +21,7 @@ function validateJson(text) {
 }
 
 export default function PromptsTab({ region, env }) {
-  const { prompts, setPrompts } = useCloudAi();
+  const { prompts, setPrompts, setAiPlans } = useCloudAi();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
@@ -259,6 +259,12 @@ export default function PromptsTab({ region, env }) {
         <ConfirmDialog
           message={`確定要刪除「${deleting.name}」嗎？此操作無法復原。`}
           onConfirm={() => {
+            // Cascade：把這個 prompt id 從所有引用它的 AI plan 中移除
+            // — 若它是某 plan 的 prompts[0]（預設），移除後第二個 prompt 自動成為新預設
+            setAiPlans(prev => prev.map(plan => ({
+              ...plan,
+              prompts: (plan.prompts || []).filter(pid => pid !== deleting.id),
+            })));
             setPrompts(prev => prev.filter(p => p.id !== deleting.id));
             setDeleting(null);
           }}

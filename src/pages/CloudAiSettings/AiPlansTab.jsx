@@ -63,13 +63,15 @@ export default function AiPlansTab({ region, env }) {
   }
 
   function openEdit(plan) {
+    // 防呆：若 plan.prompts 含已被刪除的 prompt id（legacy state），開 modal 時先過濾
+    const validPromptIds = (plan.prompts || []).filter(pid => prompts.some(p => p.id === pid));
     setForm({
       id: plan.id,
       name: plan.name,
       vlmProfileId: plan.vlmProfileId,
       dailyCap: plan.dailyCap === null ? "" : String(plan.dailyCap),
       description: plan.description || "",
-      prompts: [...(plan.prompts || [])],
+      prompts: validPromptIds,
     });
     setEditing(plan);
   }
