@@ -25,24 +25,24 @@ export const INITIAL_VLM_PROFILES = [
 
 export const INITIAL_PROMPTS = [
   // 亞洲 / Prod (既有)
-  { id: "p-1", name: "中文場景描述", description: "繁體中文通用場景分析", tags: ["zh-TW", "通用"], promptBody: '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-01", region: "亞洲", env: "Prod" },
-  { id: "p-2", name: "English Scene", description: "English general scene analysis", tags: ["en", "通用"], promptBody: '{\n  "language": "en",\n  "instruction": "Describe the scene...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-01", region: "亞洲", env: "Prod" },
-  { id: "p-3", name: "日本語シーン", description: "日本語一般場面分析", tags: ["ja", "通用"], promptBody: '{\n  "language": "ja",\n  "instruction": "シーンを説明してください...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-02", region: "亞洲", env: "Prod" },
-  { id: "p-4", name: "熊偵測（日文）", description: "熊出沒專用偵測場景", tags: ["ja", "垂直應用"], promptBody: '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}', updatedAt: "2026-04-03", region: "亞洲", env: "Prod" },
+  { id: "p-1", name: "中文場景描述", description: "繁體中文通用場景分析", promptBody: '{\n  "language": "zh-TW",\n  "instruction": "請描述畫面中的場景...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-01", region: "亞洲", env: "Prod" },
+  { id: "p-2", name: "English Scene", description: "English general scene analysis", promptBody: '{\n  "language": "en",\n  "instruction": "Describe the scene...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-01", region: "亞洲", env: "Prod" },
+  { id: "p-3", name: "日本語シーン", description: "日本語一般場面分析", promptBody: '{\n  "language": "ja",\n  "instruction": "シーンを説明してください...",\n  "output_format": "structured"\n}', updatedAt: "2026-04-02", region: "亞洲", env: "Prod" },
+  { id: "p-4", name: "熊偵測（日文）", description: "熊出沒專用偵測場景", promptBody: '{\n  "language": "ja",\n  "instruction": "熊の存在を検出...",\n  "detection_target": "bear"\n}', updatedAt: "2026-04-03", region: "亞洲", env: "Prod" },
   // 美洲 / Prod
-  { id: "p-5", name: "場景描述_美洲/Prod", description: "美洲 Prod 通用場景", tags: ["en", "通用"], promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "美洲", env: "Prod" },
+  { id: "p-5", name: "場景描述_美洲/Prod", description: "美洲 Prod 通用場景", promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "美洲", env: "Prod" },
   // 美洲 / STG
-  { id: "p-6", name: "場景描述_美洲/STG", description: "美洲 STG 通用場景", tags: ["en", "通用"], promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "美洲", env: "STG" },
+  { id: "p-6", name: "場景描述_美洲/STG", description: "美洲 STG 通用場景", promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "美洲", env: "STG" },
   // 中國 / Prod
-  { id: "p-7", name: "中文場景描述_中國/Prod", description: "中國 Prod 通用", tags: ["zh-CN", "通用"], promptBody: '{\n  "language": "zh-CN"\n}', updatedAt: "2026-05-01", region: "中國", env: "Prod" },
+  { id: "p-7", name: "中文場景描述_中國/Prod", description: "中國 Prod 通用", promptBody: '{\n  "language": "zh-CN"\n}', updatedAt: "2026-05-01", region: "中國", env: "Prod" },
   // 中國 / STG
-  { id: "p-8", name: "中文場景描述_中國/STG", description: "中國 STG 通用", tags: ["zh-CN", "通用"], promptBody: '{\n  "language": "zh-CN"\n}', updatedAt: "2026-05-01", region: "中國", env: "STG" },
+  { id: "p-8", name: "中文場景描述_中國/STG", description: "中國 STG 通用", promptBody: '{\n  "language": "zh-CN"\n}', updatedAt: "2026-05-01", region: "中國", env: "STG" },
   // 亞洲 / STG
-  { id: "p-9", name: "中文場景描述_亞洲/STG", description: "亞洲 STG 通用", tags: ["zh-TW", "通用"], promptBody: '{\n  "language": "zh-TW"\n}', updatedAt: "2026-05-01", region: "亞洲", env: "STG" },
+  { id: "p-9", name: "中文場景描述_亞洲/STG", description: "亞洲 STG 通用", promptBody: '{\n  "language": "zh-TW"\n}', updatedAt: "2026-05-01", region: "亞洲", env: "STG" },
   // 歐洲 / Prod
-  { id: "p-11", name: "場景描述_歐洲/Prod", description: "歐洲 Prod 通用", tags: ["en", "通用"], promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "歐洲", env: "Prod" },
+  { id: "p-11", name: "場景描述_歐洲/Prod", description: "歐洲 Prod 通用", promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "歐洲", env: "Prod" },
   // 歐洲 / STG
-  { id: "p-12", name: "場景描述_歐洲/STG", description: "歐洲 STG 通用", tags: ["en", "通用"], promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "歐洲", env: "STG" },
+  { id: "p-12", name: "場景描述_歐洲/STG", description: "歐洲 STG 通用", promptBody: '{\n  "language": "en"\n}', updatedAt: "2026-05-01", region: "歐洲", env: "STG" },
 ];
 
 // AI Plan 的 prompts 為一組可在前端被使用者切換的 Prompt 參考（ID），順序具語意：

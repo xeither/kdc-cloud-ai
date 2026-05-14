@@ -7,7 +7,7 @@ import Pagination from '../../components/Pagination';
 
 const today = new Date().toISOString().slice(0, 10);
 
-const EMPTY_FORM = { name: "", description: "", tags: [], promptBody: '{\n  \n}' };
+const EMPTY_FORM = { name: "", description: "", promptBody: '{\n  \n}' };
 
 // 回傳 null 代表 OK，否則回傳錯誤訊息
 function validateJson(text) {
@@ -25,7 +25,6 @@ export default function PromptsTab({ region, env }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleting, setDeleting] = useState(null);
-  const [tagInput, setTagInput] = useState("");
   const [dupName, setDupName] = useState(null);
   const [bodyError, setBodyError] = useState(null);
 
@@ -33,15 +32,13 @@ export default function PromptsTab({ region, env }) {
   const scopedPrompts = prompts.filter(p => p.region === region && p.env === env);
 
   function openNew() {
-    setForm({ ...EMPTY_FORM, tags: [] });
-    setTagInput("");
+    setForm({ ...EMPTY_FORM });
     setBodyError(validateJson(EMPTY_FORM.promptBody));
     setEditing("new");
   }
 
   function openEdit(p) {
-    setForm({ ...p, tags: [...p.tags] });
-    setTagInput("");
+    setForm({ ...p });
     setBodyError(validateJson(p.promptBody));
     setEditing(p);
   }
@@ -49,7 +46,6 @@ export default function PromptsTab({ region, env }) {
   function closeModal() {
     setEditing(null);
     setForm(EMPTY_FORM);
-    setTagInput("");
     setBodyError(null);
   }
 
@@ -66,28 +62,13 @@ export default function PromptsTab({ region, env }) {
 
   function doCopy(p) {
     // 複製出來的 prompt 留在原本 scope（同 region/env）
-    const copy = { ...p, id: "p-" + Date.now(), name: uniqueCopyName(p.name), updatedAt: today, tags: [...p.tags] };
+    const copy = { ...p, id: "p-" + Date.now(), name: uniqueCopyName(p.name), updatedAt: today };
     setPrompts(prev => [...prev, copy]);
   }
 
   function isDuplicateName(name) {
     const trimmed = name.trim();
     return scopedPrompts.some(p => p.name === trimmed && p.id !== form.id);
-  }
-
-  function addTag(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const tag = tagInput.trim();
-      if (tag && !form.tags.includes(tag)) {
-        setForm(f => ({ ...f, tags: [...f.tags, tag] }));
-      }
-      setTagInput("");
-    }
-  }
-
-  function removeTag(tag) {
-    setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }));
   }
 
   function save() {
@@ -201,31 +182,6 @@ export default function PromptsTab({ region, env }) {
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder="此 Prompt 的用途說明"
             />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-kdc-body font-medium text-kdc-text mb-1.5">標籤</label>
-            <div className="border border-kdc-border rounded-[5px] px-2.5 py-2 min-h-[44px] flex flex-wrap gap-1.5 items-center focus-within:border-kdc-primary focus-within:shadow-[0_0_0_2px_rgba(0,68,128,0.1)]">
-              {form.tags.map(tag => (
-                <span key={tag} className="inline-flex items-center gap-1 bg-[#e8f0f8] text-kdc-primary px-2.5 py-0.5 rounded-xl text-[13px]">
-                  {tag}
-                  <button
-                    type="button"
-                    className="bg-transparent border-none cursor-pointer text-kdc-primary leading-none flex items-center hover:text-red-500"
-                    onClick={() => removeTag(tag)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-              <input
-                className="outline-none border-none text-kdc-table font-kdc text-sm flex-1 min-w-[80px] bg-transparent"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={addTag}
-                placeholder={form.tags.length === 0 ? "輸入標籤後按 Enter" : ""}
-              />
-            </div>
           </div>
 
           <div className="mb-4">
