@@ -5,7 +5,7 @@ import AiPlansTab from './AiPlansTab';
 import VendorAiSettingsTab from './VendorAiSettingsTab';
 import RegionEnvSelector from '../../components/RegionEnvSelector';
 
-const tabs = ["VLM Profiles", "Prompts", "AI Plans", "全域方案"];
+const tabs = ["VLM Profiles", "Prompts", "AI Plans", "共用方案"];
 
 export default function CloudAiSettings() {
   const [activeTab, setActiveTab] = useState(0);
@@ -25,7 +25,7 @@ export default function CloudAiSettings() {
         />
       </div>
       <p className="text-[12px] text-[#999] mb-3 -mt-3">
-        每個 (地區, 環境) 對應獨立的 server，VLM Profiles / Prompts / AI Plans / 全域方案 各自獨立。
+        每個 (地區, 環境) 對應獨立的 server，VLM Profiles / Prompts / AI Plans / 共用方案 各自獨立。
       </p>
       <ul className="flex flex-wrap pl-[5px] m-0" role="tablist">
         {tabs.map((t, i) => (

@@ -42,7 +42,7 @@ export default function AiPlansTab({ region, env }) {
   }
 
   function usedByCustomerCount(planId) {
-    // 全域方案：所有客戶都套用
+    // 共用方案：所有客戶都套用
     if (globalPlans.includes(planId)) return customers.length;
     // 專屬方案：看 customerCloudAi[*].selectedSpecificPlanIds 包含此 planId 的客戶數
     return customers.filter(c => {

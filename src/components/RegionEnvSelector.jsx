@@ -1,7 +1,7 @@
 import { REGION_OPTIONS, ENV_OPTIONS } from '../data/customersData';
 
 // 共用 (地區, 環境) 選擇器：Cloud AI 設定 page 與客戶 Cloud AI tab 共用。
-// 概念：每個 (region, env) 對應到一個獨立 server，VLM Profiles / Prompts / AI Plans / 全域方案 完全隔離。
+// 概念：每個 (region, env) 對應到一個獨立 server，VLM Profiles / Prompts / AI Plans / 共用方案 完全隔離。
 export default function RegionEnvSelector({ region, env, onRegionChange, onEnvChange }) {
   return (
     <div className="inline-flex items-center gap-2">

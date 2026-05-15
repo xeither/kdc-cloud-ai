@@ -236,12 +236,12 @@ export const SYSTEM_FEATURE_LIST = [
 ];
 
 // Cloud AI 加值服務 — 以 (region, env) 為單位過濾方案清單。
-// 每個 plan id 自帶 region/env，因此 customer 端只需記錄「勾選了哪些非全域 plan」即可（selectedSpecificPlanIds）。
-// 全域方案（globalPlans）在客戶頁面自動套用且不可取消（Q1=a）。
+// 每個 plan id 自帶 region/env，因此 customer 端只需記錄「勾選了哪些非共用 plan」即可（selectedSpecificPlanIds）。
+// 共用方案（globalPlans）在客戶頁面自動套用且不可取消（Q1=a）。
 export const REGION_OPTIONS = ["美洲", "中國", "亞洲", "歐洲"];
 export const ENV_OPTIONS = ["Prod", "STG"];
 
-// 每位客戶綁定的「專屬」AI plan ID 清單（全域方案自動套用，不在此記錄）。
+// 每位客戶綁定的「專屬」AI plan ID 清單（共用方案自動套用，不在此記錄）。
 // V-1234 範例：在 亞洲/Prod 勾了 plan-2 (熊出沒偵測)，在 亞洲/STG 勾了 plan-10 (熊出沒偵測_亞洲/STG)。
 export const INITIAL_CUSTOMER_CLOUD_AI = {
   "V-1234": {

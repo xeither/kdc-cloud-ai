@@ -3,8 +3,9 @@ import { useCloudAi } from '../../context/CloudAiContext';
 import { IconPlus, IconClose } from '../../icons';
 import Modal from '../../components/Modal';
 
-// v1.16 起本 tab 僅管理「共用區」全域方案；Vendor 專屬區已搬到客戶資訊頁面 Cloud AI tab（D-035）
-// v1.19：(region, env) scope 化 — 每個 (region, env) 各自獨立的全域方案清單。
+// v1.16 起本 tab 僅管理共用方案；Vendor 專屬區已搬到客戶資訊頁面 Cloud AI tab（D-035）
+// v1.19：(region, env) scope 化 — 每個 (region, env) 各自獨立的共用方案清單。
+// v1.23：UI 用語從「全域方案」改為「共用方案」（D-041）；context state 仍叫 globalPlans 不動。
 export default function VendorAiSettingsTab({ region, env }) {
   const { aiPlans, globalPlans, setGlobalPlans, vlmProfiles } = useCloudAi();
   const [showPicker, setShowPicker] = useState(false);
@@ -13,12 +14,12 @@ export default function VendorAiSettingsTab({ region, env }) {
     return vlmProfiles.find(p => p.id === id)?.name || "—";
   }
 
-  // 當前 (region, env) 下：已成為全域的 plan ids
+  // 當前 (region, env) 下：已成為共用的 plan ids
   const scopedGlobalPlanIds = globalPlans.filter(pid => {
     const p = aiPlans.find(ap => ap.id === pid);
     return p && p.region === region && p.env === env;
   });
-  // 當前 scope 下、尚未被加入全域的 plans（可被加入）
+  // 當前 scope 下、尚未被加入共用的 plans（可被加入）
   const availablePlans = aiPlans.filter(
     p => p.region === region && p.env === env && !globalPlans.includes(p.id)
   );
@@ -36,7 +37,7 @@ export default function VendorAiSettingsTab({ region, env }) {
     <div>
       <h3 className="text-kdc-table font-medium text-kdc-primary mb-1 flex items-center gap-2">
         <span className="w-1 h-5 bg-kdc-primary rounded-sm inline-block" />
-        共用區 — 全域預設方案（{region} / {env}）
+        共用方案（{region} / {env}）
       </h3>
       <p className="text-[12px] text-[#999] mb-3">
         所有客戶在此 ({region} / {env}) scope 下預設可用的 AI Plan 清單。客戶個別的專屬方案請至「客戶資訊」頁面該客戶的「Cloud AI」tab 設定。
@@ -81,7 +82,7 @@ export default function VendorAiSettingsTab({ region, env }) {
           {scopedGlobalPlanIds.length === 0 && (
             <tr>
               <td colSpan={4} className="px-3 py-6 text-center text-kdc-body text-[#999]">
-                此 ({region} / {env}) 尚無全域方案 — 點下方「加入方案」從本 scope 的 AI Plans 挑一個加入
+                此 ({region} / {env}) 尚無共用方案 — 點下方「加入方案」從本 scope 的 AI Plans 挑一個加入
               </td>
             </tr>
           )}
@@ -97,7 +98,7 @@ export default function VendorAiSettingsTab({ region, env }) {
 
       {showPicker && (
         <Modal
-          title="加入全域方案"
+          title="加入共用方案"
           onClose={() => setShowPicker(false)}
         >
           {availablePlans.length === 0 ? (

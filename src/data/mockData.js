@@ -70,7 +70,8 @@ export const INITIAL_AI_PLANS = [
   { id: "plan-12", name: "看圖說故事_歐洲/STG", vlmProfileId: "vlm-12", dailyCap: 100, description: "歐洲 STG 測試", prompts: ["p-12"], region: "歐洲", env: "STG" },
 ];
 
-// 全域方案清單 — plan id 本身已隱含 (region, env) scope，所以共用一份扁平清單即可。
+// 共用方案清單（UI 用詞：「共用方案」；內部識別維持 globalPlans 不動）
+// plan id 本身已隱含 (region, env) scope，所以共用一份扁平清單即可。
 // 每個 (region, env) 各自挑 0~N 個 global，篩選時用 plan 自帶的 region/env 過濾。
 export const INITIAL_GLOBAL_PLANS = [
   "plan-1",   // 亞洲/Prod

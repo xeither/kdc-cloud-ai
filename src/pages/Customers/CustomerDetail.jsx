@@ -411,7 +411,7 @@ function P2pInsightTab({ customer }) {
 }
 
 // v1.19：客戶 Cloud AI tab 改為 (region, env) scope + 勾選清單。
-// - 全域方案：自動勾選 + 不可取消（Q1=a），客戶頁不能取消全域套用
+// - 共用方案：自動勾選 + 不可取消（Q1=a），客戶頁不能取消共用套用
 // - 專屬方案：使用者勾選，存到 customerCloudAi[id].selectedSpecificPlanIds
 function CloudAiTab({ customer }) {
   const { aiPlans, globalPlans, customerCloudAi, setCustomerCloudAi } = useCloudAi();
@@ -420,7 +420,7 @@ function CloudAiTab({ customer }) {
 
   const selectedSpecific = customerCloudAi[customer.id]?.selectedSpecificPlanIds || [];
 
-  // 當前 (region, env) scope 下所有 plans，分成「全域」與「非全域（客戶可選）」兩組
+  // 當前 (region, env) scope 下所有 plans，分成「共用」與「非共用（客戶可選）」兩組
   const scopedPlans = aiPlans.filter(p => p.region === region && p.env === env);
   const globalRows = scopedPlans.filter(p => globalPlans.includes(p.id));
   const specificRows = scopedPlans.filter(p => !globalPlans.includes(p.id));
@@ -440,14 +440,8 @@ function CloudAiTab({ customer }) {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-kdc-table font-medium text-kdc-primary m-0">Cloud AI 加值服務</h3>
-          <p className="text-[12px] text-[#999] mt-1">
-            列出該 (地區, 環境) 下所有 AI Plan。全域方案（綠 chip）自動套用且不可取消；專屬方案（橘 chip）由 PM 自行勾選。
-            全域方案的管理請至「Cloud AI 設定 → 全域方案」tab。
-          </p>
-        </div>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-kdc-table font-medium text-kdc-primary m-0">Cloud AI 加值服務</h3>
         <RegionEnvSelector
           region={region}
           env={env}
@@ -483,12 +477,12 @@ function CloudAiTab({ customer }) {
                       checked
                       disabled
                       className="w-[18px] h-[18px] cursor-not-allowed"
-                      title="全域方案：所有客戶自動套用，無法在客戶頁取消"
+                      title="共用方案：所有客戶自動套用，無法在客戶頁取消"
                     />
                   </td>
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium bg-[#e8f5e9] text-[#2e7d32]">
-                      全域
+                      共用
                     </span>
                   </td>
                   <td className="px-3 py-2 font-medium">{p.name}</td>

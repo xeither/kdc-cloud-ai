@@ -71,7 +71,7 @@ export default function VsaasApplicationForm() {
   // v1.19：AI Plan 選項依 (customer, region, env) 計算
   //   - region 取自申請單「地區」欄位（Cloud AI 啟用時限制單選）
   //   - env 由「服務啟用性質」決定：測試→STG / 正式→Prod
-  //   - 該客戶在此 (region, env) scope 下啟用的 plans = 全域 + selectedSpecificPlanIds
+  //   - 該客戶在此 (region, env) scope 下啟用的 plans = 共用 + selectedSpecificPlanIds
   const derivedEnv = f.serviceType === "formal" ? "Prod" : "STG";
   const derivedRegion = f.region.length === 1 ? f.region[0] : null;
   const aiPlanGuard = (() => {
@@ -248,7 +248,7 @@ export default function VsaasApplicationForm() {
           <div className="bg-[#e3f0fd] px-4 py-2.5 text-kdc-body flex items-center justify-end min-w-[160px] max-w-[160px] text-right text-kdc-text whitespace-nowrap">Cloud AI 啟用 :</div>
           <div className={valCls}>
             <Toggle checked={f.cloudAiEnabled} onChange={v => u("cloudAiEnabled", v)} />
-            <span className={`text-kdc-body ${f.cloudAiEnabled ? 'text-kdc-primary' : 'text-[#999]'}`}>{f.cloudAiEnabled ? "已啟用" : "未啟用"}</span>
+            <span className={`text-kdc-body ${f.cloudAiEnabled ? 'text-kdc-primary' : 'text-[#999]'}`}>{f.cloudAiEnabled ? "啟用" : "不啟用"}</span>
           </div>
         </div>
         {f.cloudAiEnabled && (
